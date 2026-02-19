@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Index of Thoughts // System Access</title>
+  <style>
+    :root {
+      /* ---- Base Colors ---- */
+      --bg-color: #000000;
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.6);
+      
+      /* Apple Glass Material */
+      --glass-bg: rgba(255, 255, 255, 0.02);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      
+      /* Blobs Colors (Liquid) */
+      --blob-1: #007AFF;
+      --blob-2: #AF52DE;
+      --blob-3: #5856D6;
+
+      /* Footer */
+      --footer-bg: rgba(10, 10, 10, 0.4);
+      
+      /* Fonts */
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", monospace;
+      
+      /* Terminal Colors */
+      --term-green: #00ff41;
+      --term-bg: #030303;
+    }
+
+    body.light {
+      --bg-color: #f5f5f7;
+      --text-main: #1d1d1f;
+      --text-muted: rgba(60, 60, 67, 0.6);
+      --glass-bg: rgba(255, 255, 255, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.4);
+      --blob-1: #89C4F4;
+      --blob-2: #E0BBE4;
+      --blob-3: #D291BC;
+      --footer-bg: rgba(255, 255, 255, 0.65);
+      --term-bg: #f5f5f7; /* Glitch transition color target */
+    }
+
+    /* CSS Property for Rotating Border */
+    @property --angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; cursor: none; }
+
+    body {
+      font-family: var(--font-display);
+      margin: 0; padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow: hidden; /* Main scroll handled by container */
+      transition: background-color 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.8s ease;
+      touch-action: none;
+    }
+
+    /* Scrollable container */
+    #scroll-container {
+        height: 100vh;
+        overflow-y: auto;
+        touch-action: pan-y;
+        scroll-behavior: smooth;
+        position: relative;
+        z-index: 5;
+    }
+
+    /* ==========================================
+       BOOT SCREEN & TERMINAL STYLES
+       ========================================== */
+    #boot-screen {
+      position: fixed; inset: 0; z-index: 99999;
+      background-color: var(--term-bg);
+      display: flex; justify-content: center; align-items: center;
+      font-family: var(--font-mono); color: var(--term-green);
+      transition: opacity 0.8s ease, filter 0.5s ease;
+    }
+    
+    .terminal-container {
+      width: 90%; max-width: 600px;
+      display: flex; flex-direction: column; align-items: center; /* Centered alignment */
+      padding: 20px;
+      text-align: left; /* Text remains left aligned */
+    }
+
+    #terminal-text {
+      width: 100%;
+      font-size: 14px; line-height: 1.8; 
+      text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
+      margin-bottom: 40px; min-height: 150px;
+      white-space: pre-wrap;
+    }
+
+    #start-btn {
+      opacity: 0; pointer-events: none;
+      background: rgba(0, 255, 65, 0.05); 
+      border: 1px solid var(--term-green); color: var(--term-green);
+      padding: 16px 32px; font-family: var(--font-mono); font-size: 14px;
+      letter-spacing: 3px; cursor: pointer; transition: 0.3s;
+      box-shadow: 0 0 15px rgba(0,255,65,0.1), inset 0 0 10px rgba(0,255,65,0.1);
+      align-self: center; text-transform: uppercase;
+      cursor: none; /* Custom cursor handles this */
+    }
+    
+    #start-btn.show { opacity: 1; pointer-events: auto; animation: pulse-btn 2s infinite; }
+    #start-btn:hover, #start-btn.hover-active { 
+      background: rgba(0,255,65,0.2); 
+      box-shadow: 0 0 30px rgba(0,255,65,0.4); 
+      transform: scale(1.05); 
+      color: #fff;
+    }
+
+    /* Creator Credit Style */
+    .sys-creator {
+      margin-top: 40px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      opacity: 0;
+      color: rgba(0, 255, 65, 0.4); /* Subtler green */
+      text-transform: uppercase;
+      animation: fadeIn 2s 3s forwards;
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    @keyframes pulse-btn { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
+
+    /* ==========================================
+       GLITCH EFFECT
+       ========================================== */
+    @keyframes rgbGlitch {
+      0% { transform: translate(0); filter: hue-rotate(0deg); }
+      20% { transform: translate(-4px, 2px); filter: drop-shadow(-4px 0 red) drop-shadow(4px 0 cyan); }
+      40% { transform: translate(4px, -2px); filter: drop-shadow(4px 0 red) drop-shadow(-4px 0 cyan); }
+      60% { transform: translate(0); filter: invert(20%); }
+      80% { transform: translate(-2px, 2px); filter: drop-shadow(-2px 0 red) drop-shadow(2px 0 cyan); }
+      100% { transform: translate(0); filter: none; }
+    }
+    .glitch-active { animation: rgbGlitch 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+
+
+    /* ==========================================
+       HUD WAVEFORM CANVAS
+       ========================================== */
+    #hud-waveform {
+      position: fixed; bottom: 30px; left: 30px; 
+      width: 150px; height: 50px; z-index: 10; 
+      pointer-events: none; opacity: 0.4;
+      transition: opacity 0.3s;
+      mix-blend-mode: screen;
+    }
+
+    /* ---- Noise Texture ---- */
+    .noise-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* ---- Scanlines Overlay ---- */
+    .scanlines-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+      background-size: 100% 4px; opacity: 0.15;
+    }
+
+    /* ---- Liquid Background ---- */
+    .liquid-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+    .blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.5;
+      animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+      transition: transform 0.2s cubic-bezier(0.1, 0.5, 0.1, 1); /* Quick response for gyro */
+    }
+    .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--blob-1); }
+    .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: var(--blob-2); animation-delay: -5s; }
+    .blob-3 { top: 40%; right: 20%; width: 40vw; height: 40vw; background: var(--blob-3); opacity: 0.3; animation-delay: -10s; }
+    @keyframes float { 
+      0% { transform: translate(0, 0) scale(1); } 
+      100% { transform: translate(50px, 50px) scale(1.1); } 
+    }
+
+    /* ---- Custom Cursor (Fixed Visibility) ---- */
+    /* Moved out of scroll container to body direct child for correct z-index stacking */
+    .cursor-outer {
+      position: fixed; width: 40px; height: 40px;
+      border: 1px solid var(--text-muted); border-radius: 50%;
+      pointer-events: none; z-index: 2147483647; /* Max Z-Index to stay on top of boot screen */
+      transform: translate(-50%, -50%); 
+      transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s;
+      mix-blend-mode: difference; /* Ensures visibility on black boot screen */
+    }
+    .cursor-inner {
+      position: fixed; width: 6px; height: 6px;
+      background: var(--text-main); border-radius: 50%;
+      pointer-events: none; z-index: 2147483647;
+      transform: translate(-50%, -50%);
+    }
+    body.hovering .cursor-outer { width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-color: transparent; backdrop-filter: blur(2px); }
+
+    /* ---- Layout ---- */
+    .container { max-width: 1100px; margin: auto; padding: 140px 24px 200px; position: relative; z-index: 2; }
+    
+    .header-area { text-align: center; margin-bottom: 60px; }
+    h1 {
+      font-size: 72px; font-weight: 700; letter-spacing: -2.5px; margin: 0;
+      background: linear-gradient(180deg, var(--text-main) 20%, var(--text-muted) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      opacity: 0; animation: fadeUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    .subtitle {
+      font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 3px;
+      color: var(--text-muted); margin-top: 24px;
+      opacity: 0; animation: fadeUp 1s 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      display: inline-block; padding: 8px 20px; 
+      border: 1px solid var(--glass-border); border-radius: 100px;
+      background: rgba(255,255,255,0.03); backdrop-filter: blur(10px);
+    }
+
+    /* Search Bar */
+    .search-wrapper { position: relative; max-width: 460px; margin: 0 auto 100px; opacity: 0; animation: fadeUp 1s 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+    .search-box input {
+      width: 100%; padding: 20px 24px 20px 54px;
+      border-radius: 24px; border: 1px solid var(--glass-border);
+      background: rgba(150, 150, 150, 0.05);
+      backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+      color: var(--text-main); font-size: 17px; font-weight: 400;
+      transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+      cursor: none;
+    }
+    .search-box input:focus {
+      outline: none; background: rgba(200, 200, 200, 0.1);
+      border-color: var(--text-muted); transform: scale(1.02);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .search-icon { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); width: 20px; fill: var(--text-muted); pointer-events: none; opacity: 0.8; }
+
+    /* ---- Grid & Cards ---- */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; perspective: 1000px; }
+    .card-wrap { opacity: 0; animation: fadeUp 0.8s forwards; transform-style: preserve-3d; position: relative; }
+    
+    @keyframes spin { from { --angle: 0deg; } to { --angle: 360deg; } }
+
+    .card {
+      position: relative; height: 280px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(40px) saturate(150%); -webkit-backdrop-filter: blur(40px) saturate(150%);
+      border: 1px solid rgba(255,255,255,0.05); border-radius: 32px; padding: 35px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      overflow: hidden; cursor: none;
+      transition: transform 0.1s linear, box-shadow 0.3s;
+      transform-style: preserve-3d;
+      box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+      background-clip: padding-box; 
+    }
+    .card::before {
+      content: ""; position: absolute; inset: -1px; z-index: -1;
+      border-radius: 32px;
+      background: conic-gradient(from var(--angle), transparent 60%, var(--blob-1) 85%, var(--text-main) 100%);
+      animation: spin 3s linear infinite;
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    .card:hover::before, .card.virtual-hover::before { opacity: 0.5; }
+    .card::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.08), transparent 40%);
+      opacity: 0; transition: opacity 0.5s; z-index: 2;
+    }
+    .card:hover::after, .card.virtual-hover::after { opacity: 1; }
+    .card:hover, .card.virtual-hover { box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+
+    .card-meta { display: flex; justify-content: space-between; align-items: flex-start; font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 1px; transform: translateZ(20px); position: relative; z-index: 5; }
+    .card-main { transform: translateZ(30px); position: relative; z-index: 5; }
+    .card-title {
+      font-size: 32px; font-weight: 600; line-height: 1.1; margin: 0;
+      color: var(--text-main); transition: 0.3s; letter-spacing: -0.5px;
+      min-height: 70px; font-family: var(--font-mono); word-break: break-word;
+    }
+    .card-title.revealed { font-family: var(--font-display); }
+    .card-icon {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-main); font-size: 18px; 
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .card:hover .card-icon, .card.virtual-hover .card-icon {
+      background: #FFFFFF; color: #000000; border-color: transparent;
+      transform: rotate(-45deg) scale(1.1); box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
+    }
+
+    /* ---- Footer (Collapsible & Smart) ---- */
+    .sticky-footer {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      /* Collapsed State */
+      width: 50px; height: 50px; border-radius: 50%;
+      overflow: hidden;
+      
+      background: var(--footer-bg);
+      backdrop-filter: blur(40px) saturate(220%); 
+      -webkit-backdrop-filter: blur(40px) saturate(220%);
+      
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; z-index: 100;
+      
+      animation: footerUp 1s 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+      cursor: none;
+    }
+
+    /* Pseudo-element for 'i' icon when collapsed */
+    .sticky-footer::before {
+      content: 'i';
+      font-family: var(--font-mono);
+      font-size: 18px;
+      color: var(--text-muted);
+      position: absolute;
+      transition: opacity 0.3s;
+    }
+
+    /* Hover State (Expanded) */
+    .sticky-footer:hover {
+      width: 90%; max-width: 600px; height: auto;
+      border-radius: 100px;
+      padding: 18px 30px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2);
+    }
+
+    .sticky-footer:hover::before { opacity: 0; }
+
+    .sticky-footer p { 
+      margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5; font-weight: 400;
+      opacity: 0; width: 0; white-space: nowrap;
+      transition: opacity 0.3s 0.1s, width 0s 0.5s;
+    }
+
+    .sticky-footer:hover p {
+      opacity: 1; width: auto; white-space: normal;
+      transition: opacity 0.4s 0.2s;
+    }
+
+    .sticky-footer a { color: var(--text-main); text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(150,150,150,0.4); transition: 0.2s; cursor: none; }
+    .sticky-footer a:hover { border-bottom-color: var(--text-main); }
+
+    .toggle-btn {
+      position: fixed; top: 40px; right: 40px; z-index: 500;
+      width: 50px; height: 50px; border-radius: 50%; 
+      background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border); color: var(--text-main);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.1s ease; overflow: hidden; cursor: none;
+    }
+    .toggle-btn:hover::after, .toggle-btn.hover-active::after { opacity: 1; }
+    .toggle-btn::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.1); opacity: 0; transition: opacity 0.3s; }
+    
+    /* ---- AIR TOUCHPAD (Mobile Only) ---- */
+    #air-touchpad {
+      display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 35vh;
+      z-index: 9999;
+      background: linear-gradient(to top, rgba(255,255,255,0.15), rgba(0,0,0,0.01));
+      backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.15);
+      touch-action: none; justify-content: center; align-items: center;
+      color: rgba(255,255,255,0.4); font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+      text-transform: uppercase; box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+    }
+    #air-touchpad span { pointer-events: none; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes footerUp { from { opacity: 0; transform: translate(-50%, 40px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+    @media(max-width: 800px) {
+      h1 { font-size: 42px; }
+      .container { padding-top: 100px; padding-bottom: 220px; }
+      .grid { grid-template-columns: 1fr; gap: 20px;}
+      .card { height: 260px; padding: 25px; }
+      /* Move footer up above touchpad */
+      .sticky-footer { bottom: 38vh; width: 50px; padding: 0; } 
+      .sticky-footer:hover { width: 85%; padding: 15px 20px; border-radius: 24px; }
+      #air-touchpad { display: flex; }
+      #hud-waveform { top: 30px; bottom: auto; left: 20px; width: 100px; height: 40px; }
+    }
+  </style>
+</head>
+<body class="dark">
+
+  <!-- Moved Cursor here for Z-Index Visibility Fix -->
+  <div class="cursor-outer"></div>
+  <div class="cursor-inner"></div>
+
+  <!-- 1. BOOT SEQUENCE -->
+  <div id="boot-screen">
+    <div class="terminal-container">
+      <div id="terminal-text"></div>
+      <button id="start-btn" data-hover>TAP TO INITIATE SYSTEM</button>
+      <!-- Added Creator Credit -->
+      <div class="sys-creator">ARCHITECT // ARFIN MAULANA</div>
+    </div>
+  </div>
+
+  <canvas id="hud-waveform"></canvas>
+
+  <!-- CONTENT -->
+  <div id="scroll-container">
+    <div class="noise-overlay"></div>
+    <div class="scanlines-overlay"></div>
+    
+    <div class="liquid-bg">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+    </div>
+
+    <button class="toggle-btn" id="toggleBtn" data-hover>
+      <svg id="themeIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+
+    <div class="container">
+      <div class="header-area">
+        <h1>Index of Thoughts</h1>
+        <div class="subtitle">ARFIN MAULANA ET AL.</div>
+      </div>
+
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line></svg>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search archive..." autocomplete="off" data-hover />
+        </div>
+      </div>
+
+      <div class="grid" id="cardGrid"></div>
+    </div>
+
+    <div class="sticky-footer" data-hover>
+      <p>
+        Just a place where I archive interesting quotes. If you'd like your quote removed from this collection, 
+        send me an email at <a href="mailto:email@example.com" data-hover>[Email Anda]</a> and I'll take care of it.
+      </p>
+    </div>
+  </div>
+
+  <!-- AIR TOUCHPAD FOR MOBILE -->
+  <div id="air-touchpad">
+    <span>AIR TOUCHPAD // SCROLL & TAP</span>
+  </div>
+
+  <script>
+    // ==========================================
+    // CONFIG & AUDIO
+    // ==========================================
+    const hoverSound = new Audio("data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAAAAAAAAAQABAAIAAgACAAIAAgABAAEAAQABAAAA/v/+/wAAAQACAAIAAQAAAAEAAAD+/wAAAQABAAEAAQABAAAAAQABAAAAAQAAAAEAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAAAAAD+/wAA/v8AAAAA/v8AAAAAAQAAAAEAAQAAAAAAAAD+/wAAAAABAAAAAQAAAAEAAQAAAAAAAAD+/wAA/v8AAAAA/v8AAAAA/v8AAAEAAQAAAAAAAAD+/wAAAAAAAAAAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAEAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAAAAAD+/wAA");
+    hoverSound.volume = 0.15;
+    const playHoverSound = () => { const s = hoverSound.cloneNode(); s.volume=0.15; s.play().catch(e=>{}); };
+
+    const docs = [
+      { title: "Revisi Skripsi", link: "https://arfin-maulana.github.io/thoughts/doc1/" },
+      { title: "Menuju Indonesia Emas", link: "#" },
+      { title: "Do Something", link: "#" },
+      { title: "Refleksi Akhir Tahun", link: "#" },
+      { title: "Catatan Koding", link: "#" },
+      { title: "The Art of Doing Nothing", link: "#" },
+      { title: "Project 2026 Ideas", link: "#" },
+      { title: "Futuristic UI Design", link: "#" }
+    ];
+
+    // ==========================================
+    // 1. BOOT SEQUENCE & HACKS
+    // ==========================================
+    const bootScreen = document.getElementById('boot-screen');
+    const terminalEl = document.getElementById('terminal-text');
+    const startBtn = document.getElementById('start-btn');
+    
+    const bootMessages = [
+      "> INITIALIZING KERNEL...",
+      "> BYPASSING BROWSER SECURITY PROTOCOLS [OK]",
+      "> DECRYPTING THOUGHT_ARCHIVE.DAT...",
+      "> REQUESTING GYROSCOPE ACCESS...",
+      "> SYSTEM READY."
+    ];
+    let msgIndex = 0;
+
+    const typeLine = () => {
+      if(msgIndex < bootMessages.length) {
+        const p = document.createElement('div');
+        terminalEl.appendChild(p);
+        let charIndex = 0;
+        const typeChar = setInterval(() => {
+          p.textContent += bootMessages[msgIndex][charIndex];
+          charIndex++;
+          if(charIndex >= bootMessages[msgIndex].length) {
+            clearInterval(typeChar); msgIndex++; setTimeout(typeLine, 150);
+          }
+        }, 15);
+      } else {
+        setTimeout(() => startBtn.classList.add('show'), 300);
+      }
+    };
+    window.addEventListener('load', () => setTimeout(typeLine, 300));
+
+    // THE "TROJAN HORSE" CLICK
+    startBtn.addEventListener('click', () => {
+      // A. Init Audio Context
+      playHoverSound();
+      
+      // B. Init Gyroscope (Parallax)
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(state => { if (state === 'granted') window.addEventListener('deviceorientation', handleOrientation); })
+          .catch(console.error);
+      } else {
+        window.addEventListener('deviceorientation', handleOrientation);
+      }
+
+      // C. Glitch Transition
+      document.body.classList.add('glitch-active');
+      bootScreen.style.opacity = "0";
+      setTimeout(() => {
+        bootScreen.style.display = "none";
+        document.body.classList.remove('glitch-active');
+      }, 800);
+    });
+
+    // ==========================================
+    // 2. GYROSCOPE PARALLAX
+    // ==========================================
+    function handleOrientation(e) {
+      if (!e.gamma || !e.beta) return;
+      // Limit tilt to avoid extreme movements
+      const tiltX = Math.min(Math.max(e.gamma, -30), 30); 
+      const tiltY = Math.min(Math.max(e.beta - 45, -30), 30); 
+      
+      const blobs = document.querySelectorAll('.blob');
+      blobs.forEach((blob, index) => {
+        const depth = (index + 1) * 1.5; 
+        blob.style.transform = `translate(${tiltX * depth}px, ${tiltY * depth}px)`;
+      });
+    }
+
+    // ==========================================
+    // 3. HUD WAVEFORM
+    // ==========================================
+    const waveCanvas = document.getElementById('hud-waveform');
+    const ctx = waveCanvas.getContext('2d');
+    waveCanvas.width = 150; waveCanvas.height = 50;
+    let time = 0;
+    let waveAmplitude = 2;
+
+    function drawWaveform() {
+      ctx.clearRect(0, 0, waveCanvas.width, waveCanvas.height);
+      ctx.beginPath();
+      ctx.strokeStyle = document.body.classList.contains('light') ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)';
+      ctx.lineWidth = 1.5;
+      
+      for (let i = 0; i < waveCanvas.width; i++) {
+        const y = waveCanvas.height / 2 + Math.sin(i * 0.08 + time) * waveAmplitude + Math.cos(i * 0.12 + time * 1.5) * (waveAmplitude * 0.5);
+        if (i === 0) ctx.moveTo(i, y); else ctx.lineTo(i, y);
+      }
+      ctx.stroke();
+      time += 0.15;
+      if (waveAmplitude > 2) waveAmplitude -= 0.5; // Decay
+      requestAnimationFrame(drawWaveform);
+    }
+    drawWaveform();
+
+    const spikeWaveform = () => { if (waveAmplitude < 15) waveAmplitude += 5; };
+    window.addEventListener('mousemove', spikeWaveform);
+    window.addEventListener('touchmove', spikeWaveform);
+    document.getElementById("searchInput").addEventListener("input", spikeWaveform);
+
+
+    // ==========================================
+    // 4. CORE INTERFACE LOGIC
+    // ==========================================
+    const cardGrid = document.getElementById("cardGrid");
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    function createCard(doc, index) {
+      const wrap = document.createElement("div");
+      wrap.className = "card-wrap";
+      wrap.style.animationDelay = `${index * 0.08 + 1}s`; // Add delay for boot
+
+      const sysID = (Math.random() * 1000).toFixed(0).padStart(4, '0');
+      const numID = (index + 1).toString().padStart(2, '0');
+      const originalText = doc.title;
+      // Default scrambled
+      const initialScrambled = originalText.split('').map(c => c === ' ' ? ' ' : letters[Math.floor(Math.random() * letters.length)]).join('');
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.setAttribute('data-hover', '');
+
+      card.innerHTML = `
+        <div class="card-meta">
+          <span class="card-num">SYS.${sysID} // ID:${numID}</span>
+          <div class="card-icon">↗</div>
+        </div>
+        <div class="card-main">
+          <h3 class="card-title" aria-label="${originalText}">${initialScrambled}</h3>
+        </div>
+      `;
+
+      // 3D Tilt & Decode
+      card.onEnter = () => {
+        playHoverSound();
+        card.classList.add('virtual-hover');
+        const titleEl = card.querySelector('.card-title');
+        titleEl.classList.add('revealed');
+        let iteration = 0;
+        clearInterval(titleEl.dataset.interval);
+        titleEl.dataset.interval = setInterval(() => {
+          titleEl.innerText = originalText.split("").map((letter, index) => {
+              if(index < iteration) return originalText[index];
+              if(originalText[index] === " ") return " ";
+              return letters[Math.floor(Math.random() * letters.length)];
+            }).join("");
+          if(iteration >= originalText.length) clearInterval(titleEl.dataset.interval);
+          iteration += 1 / 3;
+        }, 30);
+      };
+
+      card.onLeave = () => {
+        card.classList.remove('virtual-hover');
+        card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale(1)`;
+        const titleEl = card.querySelector('.card-title');
+        titleEl.classList.remove('revealed');
+        titleEl.innerText = initialScrambled; // Revert to scrambled
+        clearInterval(titleEl.dataset.interval);
+      };
+
+      card.onMove = (clientX, clientY) => {
+        const rect = card.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+        const xRot = -1 * ((y - rect.height / 2) / rect.height * 6);
+        const yRot = (x - rect.width / 2) / rect.width * 6;
+        card.style.transform = `perspective(1000px) rotateX(${xRot}deg) rotateY(${yRot}deg) scale(1.02)`;
+      }
+
+      if (!isTouchDevice) {
+          wrap.addEventListener("mousemove", (e) => card.onMove(e.clientX, e.clientY));
+          wrap.addEventListener('mouseenter', card.onEnter);
+          wrap.addEventListener("mouseleave", card.onLeave);
+      }
+
+      wrap.addEventListener("click", () => { if(doc.link !== "#") window.open(doc.link, '_blank'); });
+      wrap.appendChild(card);
+      cardGrid.appendChild(wrap);
+    }
+
+    docs.forEach((doc, i) => createCard(doc, i));
+
+    // ==========================================
+    // 5. AIR TOUCHPAD LOGIC (EDGE SCROLLING)
+    // ==========================================
+    if (isTouchDevice) {
+        const touchpad = document.getElementById('air-touchpad');
+        const outer = document.querySelector(".cursor-outer");
+        const inner = document.querySelector(".cursor-inner");
+        const scrollCont = document.getElementById('scroll-container');
+        
+        let vx = window.innerWidth / 2;
+        let vy = window.innerHeight / 2 - 100;
+        const sensitivity = 2.5;
+        let lastTouchX = 0, lastTouchY = 0;
+        let activeCard = null;
+
+        const updateCursor = () => {
+            outer.style.transform = `translate(${vx}px, ${vy}px) translate(-50%, -50%)`;
+            inner.style.transform = `translate(${vx}px, ${vy}px) translate(-50%, -50%)`;
+        };
+        updateCursor();
+
+        touchpad.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
+            touchpad.style.background = "rgba(255,255,255,0.15)";
+        }, {passive: false});
+
+        touchpad.addEventListener('touchend', (e) => {
+             touchpad.style.background = "linear-gradient(to top, rgba(255,255,255,0.15), rgba(0,0,0,0.01))";
+             const el = document.elementFromPoint(vx, vy);
+             if(el) el.dispatchEvent(new MouseEvent('click', {view: window, bubbles: true, cancelable: true}));
+        });
+
+        touchpad.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touchX = e.touches[0].clientX; const touchY = e.touches[0].clientY;
+            vx += (touchX - lastTouchX) * sensitivity;
+            vy += (touchY - lastTouchY) * sensitivity;
+            vx = Math.max(0, Math.min(window.innerWidth, vx));
+            vy = Math.max(0, Math.min(window.innerHeight, vy));
+            
+            updateCursor();
+
+            // EDGE SCROLLING LOGIC
+            const scrollThreshold = 80;
+            const scrollSpeed = 15;
+            if (vy < scrollThreshold) {
+                scrollCont.scrollBy(0, -scrollSpeed);
+            } else if (vy > window.innerHeight - scrollThreshold) {
+                scrollCont.scrollBy(0, scrollSpeed);
+            }
+
+            // Hit Testing
+            const el = document.elementFromPoint(vx, vy);
+            const cardEl = el ? el.closest('.card') : null;
+
+            if (cardEl) {
+                if (activeCard !== cardEl) {
+                    if (activeCard) activeCard.onLeave();
+                    activeCard = cardEl; activeCard.onEnter();
+                }
+                activeCard.onMove(vx, vy);
+            } else if (activeCard) {
+                activeCard.onLeave(); activeCard = null;
+            }
+            
+            // Magnetic Button Logic
+            const toggleBtnEl = document.querySelector('.toggle-btn');
+            const rect = toggleBtnEl.getBoundingClientRect();
+            const dist = Math.hypot(vx - (rect.left+rect.width/2), vy - (rect.top+rect.height/2));
+            if(dist < 80) {
+               toggleBtnEl.style.transform = `translate(${(vx-(rect.left+rect.width/2))*0.4}px, ${(vy-(rect.top+rect.height/2))*0.4}px) scale(1.1)`;
+               toggleBtnEl.classList.add('hover-active');
+            } else {
+               toggleBtnEl.style.transform = `scale(1)`;
+               toggleBtnEl.classList.remove('hover-active');
+            }
+
+            lastTouchX = touchX; lastTouchY = touchY;
+        }, {passive: false});
+    }
+
+    // ==========================================
+    // 6. DESKTOP CURSOR & SEARCH
+    // ==========================================
+    if (!isTouchDevice) {
+        const outer = document.querySelector(".cursor-outer");
+        const inner = document.querySelector(".cursor-inner");
+        const toggleBtnEl = document.querySelector('.toggle-btn');
+        
+        window.addEventListener("mousemove", e => {
+          const x = e.clientX; const y = e.clientY;
+          inner.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+          outer.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+
+          const rect = toggleBtnEl.getBoundingClientRect();
+          const dist = Math.hypot(x - (rect.left+rect.width/2), y - (rect.top+rect.height/2));
+          if (dist < 100) { 
+            toggleBtnEl.style.transform = `translate(${(x-(rect.left+rect.width/2))*0.4}px, ${(y-(rect.top+rect.height/2))*0.4}px) scale(1.1)`;
+          } else {
+            toggleBtnEl.style.transform = `scale(1)`;
+          }
+        });
+    }
+
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      const val = e.target.value.toLowerCase();
+      document.querySelectorAll(".card-wrap").forEach(wrap => {
+        const title = wrap.querySelector(".card-title").getAttribute('aria-label').toLowerCase();
+        wrap.style.display = title.includes(val) ? "block" : "none";
+      });
+    });
+
+    document.body.addEventListener('mouseover', (e) => {
+      if(e.target.closest('[data-hover]') || e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
+        document.body.classList.add('hovering');
+      } else {
+        document.body.classList.remove('hovering');
+      }
+    });
+
+    const toggleBtn = document.getElementById("toggleBtn");
+    const themeIcon = document.getElementById("themeIcon");
+    let isDark = true;
+    toggleBtn.addEventListener("click", () => {
+      playHoverSound();
+      isDark = !isDark;
+      document.body.className = isDark ? "dark" : "light";
+      if(!isDark) {
+        themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+      } else {
+        themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+      }
+    });
+  </script>
+</body>
+</html>
