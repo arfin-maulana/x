@@ -42,10 +42,9 @@
       --blob-2: #E0BBE4;
       --blob-3: #D291BC;
       --footer-bg: rgba(255, 255, 255, 0.65);
-      --term-bg: #f5f5f7; /* Glitch transition color target */
+      --term-bg: #f5f5f7;
     }
 
-    /* CSS Property for Rotating Border */
     @property --angle {
       syntax: '<angle>';
       initial-value: 0deg;
@@ -60,24 +59,22 @@
       background-color: var(--bg-color);
       color: var(--text-main);
       min-height: 100vh;
-      overflow: hidden; /* Main scroll handled by container */
+      overflow: hidden;
       transition: background-color 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.8s ease;
-      touch-action: none;
+      touch-action: none; /* Prevent browser scroll handling */
     }
 
     /* Scrollable container */
     #scroll-container {
         height: 100vh;
         overflow-y: auto;
-        touch-action: pan-y;
+        touch-action: none; /* Kita handle scroll via JS untuk touchpad */
         scroll-behavior: smooth;
         position: relative;
         z-index: 5;
     }
 
-    /* ==========================================
-       BOOT SCREEN & TERMINAL STYLES
-       ========================================== */
+    /* BOOT SCREEN */
     #boot-screen {
       position: fixed; inset: 0; z-index: 99999;
       background-color: var(--term-bg);
@@ -88,17 +85,14 @@
     
     .terminal-container {
       width: 90%; max-width: 600px;
-      display: flex; flex-direction: column; align-items: center; /* Centered alignment */
-      padding: 20px;
-      text-align: left; /* Text remains left aligned */
+      display: flex; flex-direction: column; align-items: center;
+      padding: 20px; text-align: left;
     }
 
     #terminal-text {
-      width: 100%;
-      font-size: 14px; line-height: 1.8; 
+      width: 100%; font-size: 14px; line-height: 1.8; 
       text-shadow: 0 0 5px rgba(0, 255, 65, 0.4);
-      margin-bottom: 40px; min-height: 150px;
-      white-space: pre-wrap;
+      margin-bottom: 40px; min-height: 150px; white-space: pre-wrap;
     }
 
     #start-btn {
@@ -108,35 +102,23 @@
       padding: 16px 32px; font-family: var(--font-mono); font-size: 14px;
       letter-spacing: 3px; cursor: pointer; transition: 0.3s;
       box-shadow: 0 0 15px rgba(0,255,65,0.1), inset 0 0 10px rgba(0,255,65,0.1);
-      align-self: center; text-transform: uppercase;
-      cursor: none; /* Custom cursor handles this */
+      align-self: center; text-transform: uppercase; cursor: none;
     }
     
     #start-btn.show { opacity: 1; pointer-events: auto; animation: pulse-btn 2s infinite; }
     #start-btn:hover, #start-btn.hover-active { 
-      background: rgba(0,255,65,0.2); 
-      box-shadow: 0 0 30px rgba(0,255,65,0.4); 
-      transform: scale(1.05); 
-      color: #fff;
+      background: rgba(0,255,65,0.2); box-shadow: 0 0 30px rgba(0,255,65,0.4); 
+      transform: scale(1.05); color: #fff;
     }
 
-    /* Creator Credit Style */
     .sys-creator {
-      margin-top: 40px;
-      font-size: 10px;
-      letter-spacing: 2px;
-      opacity: 0;
-      color: rgba(0, 255, 65, 0.4); /* Subtler green */
-      text-transform: uppercase;
+      margin-top: 40px; font-size: 10px; letter-spacing: 2px;
+      opacity: 0; color: rgba(0, 255, 65, 0.4); text-transform: uppercase;
       animation: fadeIn 2s 3s forwards;
     }
     @keyframes fadeIn { to { opacity: 1; } }
-
     @keyframes pulse-btn { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
 
-    /* ==========================================
-       GLITCH EFFECT
-       ========================================== */
     @keyframes rgbGlitch {
       0% { transform: translate(0); filter: hue-rotate(0deg); }
       20% { transform: translate(-4px, 2px); filter: drop-shadow(-4px 0 red) drop-shadow(4px 0 cyan); }
@@ -147,56 +129,42 @@
     }
     .glitch-active { animation: rgbGlitch 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 
-
-    /* ==========================================
-       HUD WAVEFORM CANVAS
-       ========================================== */
     #hud-waveform {
       position: fixed; bottom: 30px; left: 30px; 
       width: 150px; height: 50px; z-index: 10; 
-      pointer-events: none; opacity: 0.4;
-      transition: opacity 0.3s;
+      pointer-events: none; opacity: 0.4; transition: opacity 0.3s;
       mix-blend-mode: screen;
     }
 
-    /* ---- Noise Texture ---- */
+    /* ---- Backgrounds ---- */
     .noise-overlay {
       position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.04;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
-
-    /* ---- Scanlines Overlay ---- */
     .scanlines-overlay {
       position: fixed; inset: 0; pointer-events: none; z-index: 1;
       background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
       background-size: 100% 4px; opacity: 0.15;
     }
-
-    /* ---- Liquid Background ---- */
     .liquid-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
     .blob {
-      position: absolute; border-radius: 50%;
-      filter: blur(80px); opacity: 0.5;
+      position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5;
       animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-      transition: transform 0.2s cubic-bezier(0.1, 0.5, 0.1, 1); /* Quick response for gyro */
+      transition: transform 0.2s cubic-bezier(0.1, 0.5, 0.1, 1);
     }
     .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--blob-1); }
     .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: var(--blob-2); animation-delay: -5s; }
     .blob-3 { top: 40%; right: 20%; width: 40vw; height: 40vw; background: var(--blob-3); opacity: 0.3; animation-delay: -10s; }
-    @keyframes float { 
-      0% { transform: translate(0, 0) scale(1); } 
-      100% { transform: translate(50px, 50px) scale(1.1); } 
-    }
+    @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(50px, 50px) scale(1.1); } }
 
-    /* ---- Custom Cursor (Fixed Visibility) ---- */
-    /* Moved out of scroll container to body direct child for correct z-index stacking */
+    /* ---- Custom Cursor ---- */
     .cursor-outer {
       position: fixed; width: 40px; height: 40px;
       border: 1px solid var(--text-muted); border-radius: 50%;
-      pointer-events: none; z-index: 2147483647; /* Max Z-Index to stay on top of boot screen */
+      pointer-events: none; z-index: 2147483647;
       transform: translate(-50%, -50%); 
       transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s;
-      mix-blend-mode: difference; /* Ensures visibility on black boot screen */
+      mix-blend-mode: difference;
     }
     .cursor-inner {
       position: fixed; width: 6px; height: 6px;
@@ -225,7 +193,6 @@
       background: rgba(255,255,255,0.03); backdrop-filter: blur(10px);
     }
 
-    /* Search Bar */
     .search-wrapper { position: relative; max-width: 460px; margin: 0 auto 100px; opacity: 0; animation: fadeUp 1s 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
     .search-box input {
       width: 100%; padding: 20px 24px 20px 54px;
@@ -234,8 +201,7 @@
       backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
       color: var(--text-main); font-size: 17px; font-weight: 400;
       transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-      box-shadow: 0 4px 30px rgba(0,0,0,0.1);
-      cursor: none;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.1); cursor: none;
     }
     .search-box input:focus {
       outline: none; background: rgba(200, 200, 200, 0.1);
@@ -244,7 +210,6 @@
     }
     .search-icon { position: absolute; left: 22px; top: 50%; transform: translateY(-50%); width: 20px; fill: var(--text-muted); pointer-events: none; opacity: 0.8; }
 
-    /* ---- Grid & Cards ---- */
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; perspective: 1000px; }
     .card-wrap { opacity: 0; animation: fadeUp 0.8s forwards; transform-style: preserve-3d; position: relative; }
     
@@ -298,11 +263,11 @@
       transform: rotate(-45deg) scale(1.1); box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
     }
 
-    /* ---- Footer (Collapsible & Smart) ---- */
+    /* ---- Improved Sequenced Footer ---- */
     .sticky-footer {
       position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
       /* Collapsed State */
-      width: 50px; height: 50px; border-radius: 50%;
+      width: 50px; height: 50px; max-height: 50px; border-radius: 25px;
       overflow: hidden;
       
       background: var(--footer-bg);
@@ -317,39 +282,49 @@
       
       animation: footerUp 1s 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
       opacity: 0;
-      transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
       cursor: none;
+
+      /* Collapse Sequence: Height/Content -> Width */
+      transition: 
+        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s,
+        border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s,
+        padding 0.4s ease;
     }
 
-    /* Pseudo-element for 'i' icon when collapsed */
     .sticky-footer::before {
-      content: 'i';
-      font-family: var(--font-mono);
-      font-size: 18px;
-      color: var(--text-muted);
-      position: absolute;
-      transition: opacity 0.3s;
+      content: 'i'; font-family: var(--font-mono); font-size: 18px; color: var(--text-muted);
+      position: absolute; transition: opacity 0.3s;
     }
 
-    /* Hover State (Expanded) */
+    /* Expanded State */
     .sticky-footer:hover {
-      width: 90%; max-width: 600px; height: auto;
-      border-radius: 100px;
-      padding: 18px 30px;
+      width: 90%; max-width: 600px;
+      max-height: 300px; /* Allow height to grow */
+      border-radius: 24px;
+      
+      /* Expand Sequence: Width -> Height */
+      transition: 
+        width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s,
+        border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        
       box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2);
     }
 
+    /* Content adjustments for animation */
+    .sticky-footer:hover { padding: 18px 30px; }
     .sticky-footer:hover::before { opacity: 0; }
 
     .sticky-footer p { 
       margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5; font-weight: 400;
       opacity: 0; width: 0; white-space: nowrap;
-      transition: opacity 0.3s 0.1s, width 0s 0.5s;
+      transition: opacity 0.2s, width 0s 0.4s; /* Hide immediately when collapsing */
     }
 
     .sticky-footer:hover p {
       opacity: 1; width: auto; white-space: normal;
-      transition: opacity 0.4s 0.2s;
+      transition: opacity 0.4s 0.4s; /* Show after expansion */
     }
 
     .sticky-footer a { color: var(--text-main); text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(150,150,150,0.4); transition: 0.2s; cursor: none; }
@@ -376,7 +351,7 @@
       color: rgba(255,255,255,0.4); font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
       text-transform: uppercase; box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
     }
-    #air-touchpad span { pointer-events: none; animation: pulse 2s infinite; }
+    #air-touchpad span { pointer-events: none; animation: pulse 2s infinite; text-align: center; line-height: 1.5; }
     @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
 
     @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
@@ -387,9 +362,7 @@
       .container { padding-top: 100px; padding-bottom: 220px; }
       .grid { grid-template-columns: 1fr; gap: 20px;}
       .card { height: 260px; padding: 25px; }
-      /* Move footer up above touchpad */
-      .sticky-footer { bottom: 38vh; width: 50px; padding: 0; } 
-      .sticky-footer:hover { width: 85%; padding: 15px 20px; border-radius: 24px; }
+      .sticky-footer { bottom: 38vh; } 
       #air-touchpad { display: flex; }
       #hud-waveform { top: 30px; bottom: auto; left: 20px; width: 100px; height: 40px; }
     }
@@ -397,7 +370,6 @@
 </head>
 <body class="dark">
 
-  <!-- Moved Cursor here for Z-Index Visibility Fix -->
   <div class="cursor-outer"></div>
   <div class="cursor-inner"></div>
 
@@ -406,7 +378,6 @@
     <div class="terminal-container">
       <div id="terminal-text"></div>
       <button id="start-btn" data-hover>TAP TO INITIATE SYSTEM</button>
-      <!-- Added Creator Credit -->
       <div class="sys-creator">ARCHITECT // ARFIN MAULANA</div>
     </div>
   </div>
@@ -454,13 +425,11 @@
 
   <!-- AIR TOUCHPAD FOR MOBILE -->
   <div id="air-touchpad">
-    <span>AIR TOUCHPAD // SCROLL & TAP</span>
+    <span>1 FINGER: CURSOR // 2 FINGERS: SCROLL<br>TAP: CLICK</span>
   </div>
 
   <script>
-    // ==========================================
-    // CONFIG & AUDIO
-    // ==========================================
+    // AUDIO
     const hoverSound = new Audio("data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAAAAAAAAAQABAAIAAgACAAIAAgABAAEAAQABAAAA/v/+/wAAAQACAAIAAQAAAAEAAAD+/wAAAQABAAEAAQABAAAAAQABAAAAAQAAAAEAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAAAAAD+/wAA/v8AAAAA/v8AAAAAAQAAAAEAAQAAAAAAAAD+/wAAAAABAAAAAQAAAAEAAQAAAAAAAAD+/wAA/v8AAAAA/v8AAAAA/v8AAAEAAQAAAAAAAAD+/wAAAAAAAAAAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAEAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAAAAAD+/wAA");
     hoverSound.volume = 0.15;
     const playHoverSound = () => { const s = hoverSound.cloneNode(); s.volume=0.15; s.play().catch(e=>{}); };
@@ -476,9 +445,7 @@
       { title: "Futuristic UI Design", link: "#" }
     ];
 
-    // ==========================================
-    // 1. BOOT SEQUENCE & HACKS
-    // ==========================================
+    // BOOT SEQUENCE
     const bootScreen = document.getElementById('boot-screen');
     const terminalEl = document.getElementById('terminal-text');
     const startBtn = document.getElementById('start-btn');
@@ -510,12 +477,8 @@
     };
     window.addEventListener('load', () => setTimeout(typeLine, 300));
 
-    // THE "TROJAN HORSE" CLICK
     startBtn.addEventListener('click', () => {
-      // A. Init Audio Context
       playHoverSound();
-      
-      // B. Init Gyroscope (Parallax)
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
           .then(state => { if (state === 'granted') window.addEventListener('deviceorientation', handleOrientation); })
@@ -523,8 +486,6 @@
       } else {
         window.addEventListener('deviceorientation', handleOrientation);
       }
-
-      // C. Glitch Transition
       document.body.classList.add('glitch-active');
       bootScreen.style.opacity = "0";
       setTimeout(() => {
@@ -533,15 +494,10 @@
       }, 800);
     });
 
-    // ==========================================
-    // 2. GYROSCOPE PARALLAX
-    // ==========================================
     function handleOrientation(e) {
       if (!e.gamma || !e.beta) return;
-      // Limit tilt to avoid extreme movements
       const tiltX = Math.min(Math.max(e.gamma, -30), 30); 
       const tiltY = Math.min(Math.max(e.beta - 45, -30), 30); 
-      
       const blobs = document.querySelectorAll('.blob');
       blobs.forEach((blob, index) => {
         const depth = (index + 1) * 1.5; 
@@ -549,9 +505,6 @@
       });
     }
 
-    // ==========================================
-    // 3. HUD WAVEFORM
-    // ==========================================
     const waveCanvas = document.getElementById('hud-waveform');
     const ctx = waveCanvas.getContext('2d');
     waveCanvas.width = 150; waveCanvas.height = 50;
@@ -563,14 +516,13 @@
       ctx.beginPath();
       ctx.strokeStyle = document.body.classList.contains('light') ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.4)';
       ctx.lineWidth = 1.5;
-      
       for (let i = 0; i < waveCanvas.width; i++) {
         const y = waveCanvas.height / 2 + Math.sin(i * 0.08 + time) * waveAmplitude + Math.cos(i * 0.12 + time * 1.5) * (waveAmplitude * 0.5);
         if (i === 0) ctx.moveTo(i, y); else ctx.lineTo(i, y);
       }
       ctx.stroke();
       time += 0.15;
-      if (waveAmplitude > 2) waveAmplitude -= 0.5; // Decay
+      if (waveAmplitude > 2) waveAmplitude -= 0.5; 
       requestAnimationFrame(drawWaveform);
     }
     drawWaveform();
@@ -580,10 +532,6 @@
     window.addEventListener('touchmove', spikeWaveform);
     document.getElementById("searchInput").addEventListener("input", spikeWaveform);
 
-
-    // ==========================================
-    // 4. CORE INTERFACE LOGIC
-    // ==========================================
     const cardGrid = document.getElementById("cardGrid");
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
     let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -591,12 +539,11 @@
     function createCard(doc, index) {
       const wrap = document.createElement("div");
       wrap.className = "card-wrap";
-      wrap.style.animationDelay = `${index * 0.08 + 1}s`; // Add delay for boot
+      wrap.style.animationDelay = `${index * 0.08 + 1}s`;
 
       const sysID = (Math.random() * 1000).toFixed(0).padStart(4, '0');
       const numID = (index + 1).toString().padStart(2, '0');
       const originalText = doc.title;
-      // Default scrambled
       const initialScrambled = originalText.split('').map(c => c === ' ' ? ' ' : letters[Math.floor(Math.random() * letters.length)]).join('');
 
       const card = document.createElement("div");
@@ -613,7 +560,6 @@
         </div>
       `;
 
-      // 3D Tilt & Decode
       card.onEnter = () => {
         playHoverSound();
         card.classList.add('virtual-hover');
@@ -637,7 +583,7 @@
         card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale(1)`;
         const titleEl = card.querySelector('.card-title');
         titleEl.classList.remove('revealed');
-        titleEl.innerText = initialScrambled; // Revert to scrambled
+        titleEl.innerText = initialScrambled; 
         clearInterval(titleEl.dataset.interval);
       };
 
@@ -665,9 +611,7 @@
 
     docs.forEach((doc, i) => createCard(doc, i));
 
-    // ==========================================
-    // 5. AIR TOUCHPAD LOGIC (EDGE SCROLLING)
-    // ==========================================
+    // AIR TOUCHPAD 2.0 (MULTI-TOUCH)
     if (isTouchDevice) {
         const touchpad = document.getElementById('air-touchpad');
         const outer = document.querySelector(".cursor-outer");
@@ -679,6 +623,8 @@
         const sensitivity = 2.5;
         let lastTouchX = 0, lastTouchY = 0;
         let activeCard = null;
+        let isScrolling = false;
+        let lastScrollY = 0;
 
         const updateCursor = () => {
             outer.style.transform = `translate(${vx}px, ${vy}px) translate(-50%, -50%)`;
@@ -688,68 +634,102 @@
 
         touchpad.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            lastTouchX = e.touches[0].clientX; lastTouchY = e.touches[0].clientY;
             touchpad.style.background = "rgba(255,255,255,0.15)";
+            
+            // Multi-touch detection
+            if (e.touches.length === 1) {
+                isScrolling = false;
+                lastTouchX = e.touches[0].clientX;
+                lastTouchY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                isScrolling = true;
+                lastScrollY = e.touches[0].clientY; // Use leader finger
+            }
         }, {passive: false});
 
         touchpad.addEventListener('touchend', (e) => {
              touchpad.style.background = "linear-gradient(to top, rgba(255,255,255,0.15), rgba(0,0,0,0.01))";
-             const el = document.elementFromPoint(vx, vy);
-             if(el) el.dispatchEvent(new MouseEvent('click', {view: window, bubbles: true, cancelable: true}));
+             
+             // Handle Click only if 1 finger tap and NOT scrolling
+             if (!isScrolling && e.touches.length === 0) {
+                 const el = document.elementFromPoint(vx, vy);
+                 if(el) el.dispatchEvent(new MouseEvent('click', {view: window, bubbles: true, cancelable: true}));
+             }
+             
+             if (e.touches.length === 0) isScrolling = false;
         });
 
         touchpad.addEventListener('touchmove', (e) => {
             e.preventDefault();
-            const touchX = e.touches[0].clientX; const touchY = e.touches[0].clientY;
-            vx += (touchX - lastTouchX) * sensitivity;
-            vy += (touchY - lastTouchY) * sensitivity;
-            vx = Math.max(0, Math.min(window.innerWidth, vx));
-            vy = Math.max(0, Math.min(window.innerHeight, vy));
             
-            updateCursor();
-
-            // EDGE SCROLLING LOGIC
-            const scrollThreshold = 80;
-            const scrollSpeed = 15;
-            if (vy < scrollThreshold) {
-                scrollCont.scrollBy(0, -scrollSpeed);
-            } else if (vy > window.innerHeight - scrollThreshold) {
-                scrollCont.scrollBy(0, scrollSpeed);
+            // 2 Finger Scroll
+            if (e.touches.length === 2) {
+                const currentY = e.touches[0].clientY;
+                const deltaY = lastScrollY - currentY;
+                scrollCont.scrollBy(0, deltaY * 2.5); // Multiplier for scroll speed
+                lastScrollY = currentY;
+                return;
             }
 
-            // Hit Testing
-            const el = document.elementFromPoint(vx, vy);
-            const cardEl = el ? el.closest('.card') : null;
+            // 1 Finger Cursor
+            if (e.touches.length === 1 && !isScrolling) {
+                const touchX = e.touches[0].clientX; 
+                const touchY = e.touches[0].clientY;
+                
+                vx += (touchX - lastTouchX) * sensitivity;
+                vy += (touchY - lastTouchY) * sensitivity;
+                vx = Math.max(0, Math.min(window.innerWidth, vx));
+                vy = Math.max(0, Math.min(window.innerHeight, vy));
+                
+                updateCursor();
 
-            if (cardEl) {
-                if (activeCard !== cardEl) {
-                    if (activeCard) activeCard.onLeave();
-                    activeCard = cardEl; activeCard.onEnter();
+                // Hit Testing
+                const el = document.elementFromPoint(vx, vy);
+                const cardEl = el ? el.closest('.card') : null;
+
+                if (cardEl) {
+                    if (activeCard !== cardEl) {
+                        if (activeCard) activeCard.onLeave();
+                        activeCard = cardEl; activeCard.onEnter();
+                    }
+                    activeCard.onMove(vx, vy);
+                } else if (activeCard) {
+                    activeCard.onLeave(); activeCard = null;
                 }
-                activeCard.onMove(vx, vy);
-            } else if (activeCard) {
-                activeCard.onLeave(); activeCard = null;
-            }
-            
-            // Magnetic Button Logic
-            const toggleBtnEl = document.querySelector('.toggle-btn');
-            const rect = toggleBtnEl.getBoundingClientRect();
-            const dist = Math.hypot(vx - (rect.left+rect.width/2), vy - (rect.top+rect.height/2));
-            if(dist < 80) {
-               toggleBtnEl.style.transform = `translate(${(vx-(rect.left+rect.width/2))*0.4}px, ${(vy-(rect.top+rect.height/2))*0.4}px) scale(1.1)`;
-               toggleBtnEl.classList.add('hover-active');
-            } else {
-               toggleBtnEl.style.transform = `scale(1)`;
-               toggleBtnEl.classList.remove('hover-active');
-            }
+                
+                // Magnetic Button
+                const toggleBtnEl = document.querySelector('.toggle-btn');
+                const stickyFooter = document.querySelector('.sticky-footer');
+                
+                // Check magnetic for toggle
+                const rect = toggleBtnEl.getBoundingClientRect();
+                const dist = Math.hypot(vx - (rect.left+rect.width/2), vy - (rect.top+rect.height/2));
+                if(dist < 80) {
+                   toggleBtnEl.style.transform = `translate(${(vx-(rect.left+rect.width/2))*0.4}px, ${(vy-(rect.top+rect.height/2))*0.4}px) scale(1.1)`;
+                   toggleBtnEl.classList.add('hover-active');
+                } else {
+                   toggleBtnEl.style.transform = `scale(1)`;
+                   toggleBtnEl.classList.remove('hover-active');
+                }
 
-            lastTouchX = touchX; lastTouchY = touchY;
+                // Check hover for sticky footer to expand it
+                const footerRect = stickyFooter.getBoundingClientRect();
+                if (vx >= footerRect.left && vx <= footerRect.right && vy >= footerRect.top && vy <= footerRect.bottom) {
+                    stickyFooter.classList.add('hover-active'); // We need manual class trigger for virtual cursor
+                    // Simulate hover effect via class since :hover won't work with virtual cursor easily without elementFromPoint constnatly
+                    // Actually :hover works if we dispatch mousemove events, but pure CSS hover on virtual cursor coords is tricky.
+                    // Easier: Just let the native elementFromPoint handle "click", but for hover styles we might need JS assistance or just rely on the fact that `elementFromPoint` might trigger CSS hover if the browser supports it, usually it doesn't for a div overlay.
+                    // Let's force hover state via class for footer
+                    stickyFooter.dispatchEvent(new MouseEvent('mouseenter'));
+                } else {
+                    stickyFooter.dispatchEvent(new MouseEvent('mouseleave'));
+                }
+
+                lastTouchX = touchX; lastTouchY = touchY;
+            }
         }, {passive: false});
     }
 
-    // ==========================================
-    // 6. DESKTOP CURSOR & SEARCH
-    // ==========================================
     if (!isTouchDevice) {
         const outer = document.querySelector(".cursor-outer");
         const inner = document.querySelector(".cursor-inner");
