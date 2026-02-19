@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Index of Thoughts</title>
+  <style>
+    :root {
+      /* ---- Base Colors ---- */
+      --bg-color: #000000;
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.6);
+      
+      /* Apple Glass Material */
+      --glass-bg: rgba(255, 255, 255, 0.02);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      
+      /* Blobs Colors (Liquid) */
+      --blob-1: #007AFF;
+      --blob-2: #AF52DE;
+      --blob-3: #5856D6;
+
+      /* Footer */
+      --footer-bg: rgba(10, 10, 10, 0.4);
+      
+      /* Fonts */
+      --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", monospace;
+    }
+
+    body.light {
+      --bg-color: #f5f5f7;
+      --text-main: #1d1d1f;
+      --text-muted: rgba(60, 60, 67, 0.6);
+      
+      --glass-bg: rgba(255, 255, 255, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.4);
+      
+      --blob-1: #89C4F4;
+      --blob-2: #E0BBE4;
+      --blob-3: #D291BC;
+      
+      --footer-bg: rgba(255, 255, 255, 0.65);
+    }
+
+    /* CSS Property for Rotating Border */
+    @property --angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; cursor: none; }
+
+    body {
+      font-family: var(--font-display);
+      margin: 0; padding: 0;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background-color 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.8s ease;
+      touch-action: none; /* Prevent default scroll for Air Touchpad logic */
+    }
+
+    /* Scrollable container for content */
+    #scroll-container {
+        height: 100vh;
+        overflow-y: auto;
+        touch-action: pan-y; /* Allow vertical scroll only here */
+    }
+
+    /* ---- 1. Noise Texture ---- */
+    .noise-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+
+    /* ---- 2. Scanlines Overlay ---- */
+    .scanlines-overlay {
+      position: fixed; inset: 0; pointer-events: none; z-index: 1;
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0,0,0,0.1) 50%,
+        rgba(0,0,0,0.1)
+      );
+      background-size: 100% 4px;
+      opacity: 0.15;
+    }
+
+    /* ---- Liquid Background ---- */
+    .liquid-bg {
+      position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none;
+    }
+    .blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.5;
+      animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
+      transition: background 1s ease;
+    }
+    .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--blob-1); }
+    .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: var(--blob-2); animation-delay: -5s; }
+    .blob-3 { top: 40%; right: 20%; width: 40vw; height: 40vw; background: var(--blob-3); opacity: 0.3; animation-delay: -10s; }
+
+    @keyframes float { 
+      0% { transform: translate(0, 0) scale(1); } 
+      100% { transform: translate(50px, 50px) scale(1.1); } 
+    }
+
+    /* ---- Custom Cursor ---- */
+    .cursor-outer {
+      position: fixed; width: 40px; height: 40px;
+      border: 1px solid var(--text-muted); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%, -50%); 
+      transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s;
+      mix-blend-mode: difference;
+    }
+    .cursor-inner {
+      position: fixed; width: 6px; height: 6px;
+      background: var(--text-main); border-radius: 50%;
+      pointer-events: none; z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+    /* Hover state visual */
+    body.hovering .cursor-outer { width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-color: transparent; backdrop-filter: blur(2px); }
+
+    /* ---- Layout ---- */
+    .container {
+      max-width: 1100px; margin: auto; padding: 140px 24px 200px;
+      position: relative; z-index: 2;
+    }
+
+    /* Header */
+    .header-area { text-align: center; margin-bottom: 60px; }
+    
+    h1 {
+      font-size: 72px; font-weight: 700; letter-spacing: -2.5px; margin: 0;
+      background: linear-gradient(180deg, var(--text-main) 20%, var(--text-muted) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      opacity: 0; animation: fadeUp 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+
+    .subtitle {
+      font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 3px;
+      color: var(--text-muted); margin-top: 24px;
+      opacity: 0; animation: fadeUp 1s 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      display: inline-block; padding: 8px 20px; 
+      border: 1px solid var(--glass-border); border-radius: 100px;
+      background: rgba(255,255,255,0.03); backdrop-filter: blur(10px);
+    }
+
+    /* Search Bar */
+    .search-wrapper {
+      position: relative; max-width: 460px; margin: 0 auto 100px;
+      opacity: 0; animation: fadeUp 1s 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    .search-box input {
+      width: 100%; padding: 20px 24px 20px 54px;
+      border-radius: 24px; border: 1px solid var(--glass-border);
+      background: rgba(150, 150, 150, 0.05);
+      backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%);
+      color: var(--text-main); font-size: 17px; font-weight: 400;
+      transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 4px 30px rgba(0,0,0,0.1);
+    }
+    .search-box input:focus {
+      outline: none; background: rgba(200, 200, 200, 0.1);
+      border-color: var(--text-muted); transform: scale(1.02);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .search-icon {
+      position: absolute; left: 22px; top: 50%; transform: translateY(-50%);
+      width: 20px; fill: var(--text-muted); pointer-events: none; opacity: 0.8;
+    }
+
+    /* ---- Grid ---- */
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px; perspective: 1000px;
+    }
+    .card-wrap {
+      opacity: 0; animation: fadeUp 0.8s forwards;
+      transform-style: preserve-3d; position: relative;
+    }
+
+    /* ---- Rotating Energy Border Logic ---- */
+    @keyframes spin {
+      from { --angle: 0deg; }
+      to { --angle: 360deg; }
+    }
+
+    /* ---- Card Design ---- */
+    .card {
+      position: relative; height: 280px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(40px) saturate(150%);
+      -webkit-backdrop-filter: blur(40px) saturate(150%);
+      border: 1px solid rgba(255,255,255,0.05); 
+      border-radius: 32px;
+      padding: 35px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      overflow: hidden; cursor: none;
+      transition: transform 0.1s linear, box-shadow 0.3s;
+      transform-style: preserve-3d;
+      box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.2);
+      background-clip: padding-box; 
+    }
+
+    .card::before {
+      content: ""; position: absolute; inset: -1px; z-index: -1;
+      border-radius: 32px;
+      background: conic-gradient(from var(--angle), transparent 60%, var(--blob-1) 85%, var(--text-main) 100%);
+      animation: spin 3s linear infinite;
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    .card:hover::before, .card.virtual-hover::before { opacity: 0.5; }
+
+    .card::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.08), transparent 40%);
+      opacity: 0; transition: opacity 0.5s; z-index: 2;
+    }
+    .card:hover::after, .card.virtual-hover::after { opacity: 1; }
+
+    .card:hover, .card.virtual-hover {
+      box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+
+    .card-meta {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 1px;
+      transform: translateZ(20px); position: relative; z-index: 5;
+    }
+    
+    .card-main { transform: translateZ(30px); position: relative; z-index: 5; }
+    
+    /* Title Font: Monospaced by default to look like encrypted code */
+    .card-title {
+      font-size: 32px; font-weight: 600; line-height: 1.1; margin: 0;
+      color: var(--text-main); transition: 0.3s; letter-spacing: -0.5px;
+      min-height: 70px;
+      font-family: var(--font-mono); /* Start with mono for scrambled look */
+      word-break: break-word;
+    }
+    .card-title.revealed {
+      font-family: var(--font-display); /* Switch to nice font when revealed */
+    }
+
+    .card-icon {
+      width: 42px; height: 42px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-main); font-size: 18px; 
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .card:hover .card-icon, .card.virtual-hover .card-icon {
+      background: #FFFFFF; color: #000000; border-color: transparent;
+      transform: rotate(-45deg) scale(1.1); box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
+    }
+
+    /* ---- Ultra Liquid Footer ---- */
+    .sticky-footer {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      width: 90%; max-width: 600px;
+      
+      /* New Ultra Liquid Style */
+      background: var(--footer-bg);
+      backdrop-filter: blur(40px) saturate(220%); 
+      -webkit-backdrop-filter: blur(40px) saturate(220%);
+      
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      /* Inner shadow for volume (liquid drop effect) */
+      box-shadow: 
+        0 20px 40px rgba(0,0,0,0.3),
+        inset 0 2px 4px rgba(255,255,255,0.2),
+        inset 0 -2px 4px rgba(0,0,0,0.2);
+
+      padding: 18px 30px; border-radius: 100px;
+      text-align: center; z-index: 100;
+      
+      animation: footerUp 1s 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
+      opacity: 0;
+      transition: bottom 0.3s ease;
+    }
+    .sticky-footer p { margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5; font-weight: 400; }
+    .sticky-footer a { color: var(--text-main); text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(150,150,150,0.4); transition: 0.2s; }
+    .sticky-footer a:hover { border-bottom-color: var(--text-main); }
+
+    /* ---- Toggle Btn (Magnetic) ---- */
+    .toggle-btn {
+      position: fixed; top: 40px; right: 40px; z-index: 500;
+      width: 50px; height: 50px; border-radius: 50%; 
+      background: rgba(255,255,255,0.05); backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border); color: var(--text-main);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.1s ease;
+      overflow: hidden; cursor: none;
+    }
+    .toggle-btn::after {
+      content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.1);
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .toggle-btn:hover::after { opacity: 1; }
+    
+    /* ---- AIR TOUCHPAD (Mobile Only) ---- */
+    #air-touchpad {
+      display: none; /* Hidden on desktop */
+      position: fixed; bottom: 0; left: 0; width: 100%; height: 35vh;
+      z-index: 999;
+      background: linear-gradient(to top, rgba(255,255,255,0.1), transparent);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      touch-action: none; /* Crucial for JS drag */
+      justify-content: center; align-items: center;
+      color: rgba(255,255,255,0.3);
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    #air-touchpad span {
+      pointer-events: none; animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes footerUp { from { opacity: 0; transform: translate(-50%, 40px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+    /* Responsive */
+    @media(max-width: 800px) {
+      /* Mobile Optimizations */
+      h1 { font-size: 42px; }
+      .container { padding-top: 100px; padding-bottom: 220px; }
+      .grid { grid-template-columns: 1fr; gap: 20px;}
+      .card { height: 260px; padding: 25px; }
+      
+      /* Move footer up when trackpad is active */
+      .sticky-footer { bottom: 38vh; width: 85%; padding: 15px 20px; } 
+      
+      /* Show Air Touchpad */
+      #air-touchpad { display: flex; }
+      
+      /* Hide Real Cursor div on mobile since we control it manually or use virtual cursor */
+      .cursor-outer, .cursor-inner { transition: none; } 
+    }
+  </style>
+</head>
+<body class="dark">
+
+  <div id="scroll-container">
+    <div class="cursor-outer"></div>
+    <div class="cursor-inner"></div>
+    <div class="noise-overlay"></div>
+    <div class="scanlines-overlay"></div>
+    
+    <div class="liquid-bg">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+    </div>
+
+    <button class="toggle-btn" id="toggleBtn" data-hover>
+      <svg id="themeIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+
+    <div class="container">
+      <div class="header-area">
+        <h1>Index of Thoughts</h1>
+        <div class="subtitle">ARFIN MAULANA ET AL.</div>
+      </div>
+
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"></line></svg>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="Search archive..." autocomplete="off" data-hover />
+        </div>
+      </div>
+
+      <div class="grid" id="cardGrid"></div>
+    </div>
+
+    <div class="sticky-footer" data-hover>
+      <p>
+        Just a place where I archive interesting quotes. If you'd like your quote removed from this collection, 
+        send me an email at <a href="mailto:email@example.com" data-hover>[Email Anda]</a> and I'll take care of it.
+      </p>
+    </div>
+  </div>
+
+  <!-- AIR TOUCHPAD FOR MOBILE -->
+  <div id="air-touchpad">
+    <span>AIR TOUCHPAD // SWIPE & TAP</span>
+  </div>
+
+  <script>
+    // ==========================================
+    // AUDIO SYSTEM
+    // ==========================================
+    const hoverSound = new Audio("data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAAAAAAAAAQABAAIAAgACAAIAAgABAAEAAQABAAAA/v/+/wAAAQACAAIAAQAAAAEAAAD+/wAAAQABAAEAAQABAAAAAQABAAAAAQAAAAEAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAAAAAD+/wAA/v8AAAAA/v8AAAAAAQAAAAEAAQAAAAAAAAD+/wAAAAABAAAAAQAAAAEAAQAAAAAAAAD+/wAA/v8AAAAA/v8AAAAA/v8AAAEAAQAAAAAAAAD+/wAAAAAAAAAAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAEAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAAAAAD+/wAA");
+    hoverSound.volume = 0.15;
+
+    const playHoverSound = () => {
+      const sound = hoverSound.cloneNode();
+      sound.volume = 0.15;
+      sound.play().catch(e => {});
+    };
+
+    // ==========================================
+    // DATA & VARIABLES
+    // ==========================================
+    const docs = [
+      { title: "Revisi Skripsi", link: "https://arfin-maulana.github.io/thoughts/doc1/" },
+      { title: "Menuju Indonesia Emas", link: "#" },
+      { title: "Do Something", link: "#" },
+      { title: "Refleksi Akhir Tahun", link: "#" },
+      { title: "Catatan Koding", link: "#" },
+      { title: "The Art of Doing Nothing", link: "#" },
+      { title: "Project 2026 Ideas", link: "#" },
+      { title: "Futuristic UI Design", link: "#" }
+    ];
+
+    const cardGrid = document.getElementById("cardGrid");
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    // Helper: Generate random string based on length
+    const getRandomString = (length) => {
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+        return result;
+    };
+
+    // ==========================================
+    // CARD CREATION
+    // ==========================================
+    function createCard(doc, index) {
+      const wrap = document.createElement("div");
+      wrap.className = "card-wrap";
+      wrap.style.animationDelay = `${index * 0.08}s`;
+
+      const sysID = (Math.random() * 1000).toFixed(0).padStart(4, '0');
+      const numID = (index + 1).toString().padStart(2, '0');
+      const displayNum = `SYS.${sysID} // ID:${numID}`;
+
+      // INITIAL STATE: Scrambled Text
+      const originalText = doc.title;
+      // Initialize with random text matching length (ignoring spaces logic handled in animate)
+      const initialScrambled = originalText.split('').map(c => c === ' ' ? ' ' : letters[Math.floor(Math.random() * letters.length)]).join('');
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.setAttribute('data-hover', '');
+      card.id = `card-${index}`; // Unique ID for virtual cursor detection
+
+      card.innerHTML = `
+        <div class="card-meta">
+          <span class="card-num">${displayNum}</span>
+          <div class="card-icon">↗</div>
+        </div>
+        <div class="card-main">
+          <h3 class="card-title" aria-label="${originalText}">${initialScrambled}</h3>
+        </div>
+      `;
+
+      // 3D TILT & TEXT DECODING LOGIC (Encapsulated)
+      card.onEnter = () => {
+        playHoverSound();
+        card.classList.add('virtual-hover'); // For manual trigger
+        
+        const titleEl = card.querySelector('.card-title');
+        titleEl.classList.add('revealed');
+        let iteration = 0;
+        clearInterval(titleEl.dataset.interval);
+
+        titleEl.dataset.interval = setInterval(() => {
+          titleEl.innerText = originalText
+            .split("")
+            .map((letter, index) => {
+              if(index < iteration) return originalText[index];
+              if(originalText[index] === " ") return " ";
+              return letters[Math.floor(Math.random() * letters.length)];
+            })
+            .join("");
+          
+          if(iteration >= originalText.length) clearInterval(titleEl.dataset.interval);
+          iteration += 1 / 3;
+        }, 30);
+      };
+
+      card.onLeave = () => {
+        card.classList.remove('virtual-hover');
+        card.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale(1)`;
+        
+        const titleEl = card.querySelector('.card-title');
+        titleEl.classList.remove('revealed');
+        
+        // Re-scramble on leave
+        let iteration = 0;
+        clearInterval(titleEl.dataset.interval);
+        titleEl.dataset.interval = setInterval(() => {
+            titleEl.innerText = originalText
+            .split("")
+            .map((letter, index) => {
+                if(index < iteration) return letters[Math.floor(Math.random() * letters.length)]; // Scramble logic
+                if(originalText[index] === " ") return " ";
+                return titleEl.innerText[index]; // Keep current state
+            })
+            .join("");
+            
+             // Simple hack to fully scramble quickly then stop
+             if(iteration > 5) {
+                 titleEl.innerText = originalText.split('').map(c => c === ' ' ? ' ' : letters[Math.floor(Math.random() * letters.length)]).join('');
+                 clearInterval(titleEl.dataset.interval);
+             }
+             iteration += 1;
+        }, 50);
+      };
+
+      card.onMove = (clientX, clientY) => {
+        const rect = card.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+
+        const xRot = -1 * ((y - rect.height / 2) / rect.height * 6);
+        const yRot = (x - rect.width / 2) / rect.width * 6;
+        card.style.transform = `perspective(1000px) rotateX(${xRot}deg) rotateY(${yRot}deg) scale(1.02)`;
+      }
+
+      // DESKTOP MOUSE EVENTS
+      if (!isTouchDevice) {
+          wrap.addEventListener("mousemove", (e) => card.onMove(e.clientX, e.clientY));
+          wrap.addEventListener('mouseenter', card.onEnter);
+          wrap.addEventListener("mouseleave", card.onLeave);
+      }
+
+      wrap.addEventListener("click", () => {
+        if(doc.link !== "#") window.open(doc.link, '_blank');
+      });
+
+      wrap.appendChild(card);
+      cardGrid.appendChild(wrap);
+    }
+
+    docs.forEach((doc, i) => createCard(doc, i));
+
+
+    // ==========================================
+    // AIR TOUCHPAD LOGIC (MOBILE)
+    // ==========================================
+    if (isTouchDevice) {
+        const touchpad = document.getElementById('air-touchpad');
+        const outer = document.querySelector(".cursor-outer");
+        const inner = document.querySelector(".cursor-inner");
+        
+        // Initial virtual cursor position (Center screen)
+        let vx = window.innerWidth / 2;
+        let vy = window.innerHeight / 2 - 100;
+        
+        // Sensitivity
+        const sensitivity = 2.5;
+        let lastTouchX = 0;
+        let lastTouchY = 0;
+        let activeCard = null;
+
+        // Init Cursor
+        const updateCursorVisuals = () => {
+            outer.style.transform = `translate(${vx}px, ${vy}px) translate(-50%, -50%)`;
+            inner.style.transform = `translate(${vx}px, ${vy}px) translate(-50%, -50%)`;
+        };
+        updateCursorVisuals();
+
+        touchpad.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            lastTouchX = e.touches[0].clientX;
+            lastTouchY = e.touches[0].clientY;
+            touchpad.style.background = "rgba(255,255,255,0.15)";
+        }, {passive: false});
+
+        touchpad.addEventListener('touchend', (e) => {
+             touchpad.style.background = "linear-gradient(to top, rgba(255,255,255,0.1), transparent)";
+             // Implement Tap to Click
+             const elementBelow = document.elementFromPoint(vx, vy);
+             if(elementBelow) {
+                 const clickEvent = new MouseEvent('click', {
+                     view: window, bubbles: true, cancelable: true
+                 });
+                 elementBelow.dispatchEvent(clickEvent);
+             }
+        });
+
+        touchpad.addEventListener('touchmove', (e) => {
+            e.preventDefault(); // Prevent scrolling while using trackpad
+            const touchX = e.touches[0].clientX;
+            const touchY = e.touches[0].clientY;
+            
+            const deltaX = (touchX - lastTouchX) * sensitivity;
+            const deltaY = (touchY - lastTouchY) * sensitivity;
+            
+            vx += deltaX;
+            vy += deltaY;
+            
+            // Bounds checking
+            vx = Math.max(0, Math.min(window.innerWidth, vx));
+            vy = Math.max(0, Math.min(window.innerHeight, vy)); // Allow reaching top
+            
+            updateCursorVisuals();
+
+            // Hit Testing for Cards
+            const elementBelow = document.elementFromPoint(vx, vy);
+            const cardElement = elementBelow ? elementBelow.closest('.card') : null;
+
+            if (cardElement) {
+                if (activeCard !== cardElement) {
+                    if (activeCard) activeCard.onLeave(); // Leave old card
+                    activeCard = cardElement;
+                    activeCard.onEnter(); // Enter new card
+                }
+                // Update 3D Tilt based on virtual cursor
+                activeCard.onMove(vx, vy);
+            } else {
+                if (activeCard) {
+                    activeCard.onLeave();
+                    activeCard = null;
+                }
+            }
+
+            // Magnetic Buttons for Mobile Virtual Cursor
+            const toggleBtnEl = document.querySelector('.toggle-btn');
+            const btnRect = toggleBtnEl.getBoundingClientRect();
+            const btnCX = btnRect.left + btnRect.width/2;
+            const btnCY = btnRect.top + btnRect.height/2;
+            const dist = Math.hypot(vx - btnCX, vy - btnCY);
+            if(dist < 80) {
+                 const pullX = (vx - btnCX) * 0.4;
+                 const pullY = (vy - btnCY) * 0.4;
+                 toggleBtnEl.style.transform = `translate(${pullX}px, ${pullY}px) scale(1.1)`;
+            } else {
+                 toggleBtnEl.style.transform = `translate(0,0) scale(1)`;
+            }
+
+            lastTouchX = touchX;
+            lastTouchY = touchY;
+        }, {passive: false});
+    }
+
+
+    // ==========================================
+    // STANDARD DESKTOP INTERACTIONS
+    // ==========================================
+    // Search Logic
+    document.getElementById("searchInput").addEventListener("input", (e) => {
+      const val = e.target.value.toLowerCase();
+      document.querySelectorAll(".card-wrap").forEach(wrap => {
+        const title = wrap.querySelector(".card-title").getAttribute('aria-label').toLowerCase();
+        wrap.style.display = title.includes(val) ? "block" : "none";
+      });
+    });
+
+    // Cursor & Magnetic (Desktop)
+    if (!isTouchDevice) {
+        const outer = document.querySelector(".cursor-outer");
+        const inner = document.querySelector(".cursor-inner");
+        const toggleBtnEl = document.querySelector('.toggle-btn');
+        
+        window.addEventListener("mousemove", e => {
+          const x = e.clientX;
+          const y = e.clientY;
+          
+          inner.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+          outer.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+
+          const btnRect = toggleBtnEl.getBoundingClientRect();
+          const btnCenterX = btnRect.left + btnRect.width / 2;
+          const btnCenterY = btnRect.top + btnRect.height / 2;
+          const dist = Math.hypot(x - btnCenterX, y - btnCenterY);
+
+          if (dist < 100) { 
+            const pullX = (x - btnCenterX) * 0.4;
+            const pullY = (y - btnCenterY) * 0.4;
+            toggleBtnEl.style.transform = `translate(${pullX}px, ${pullY}px) scale(1.1)`;
+          } else {
+            toggleBtnEl.style.transform = `translate(0px, 0px) scale(1)`;
+          }
+        });
+    }
+    
+    // Global Hover Listener
+    document.body.addEventListener('mouseover', (e) => {
+      if(e.target.closest('[data-hover]') || e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') {
+        document.body.classList.add('hovering');
+      } else {
+        document.body.classList.remove('hovering');
+      }
+    });
+
+    // Theme Toggle
+    const toggleBtn = document.getElementById("toggleBtn");
+    const themeIcon = document.getElementById("themeIcon");
+    let isDark = true;
+
+    toggleBtn.addEventListener("click", (e) => {
+      playHoverSound();
+      isDark = !isDark;
+      document.body.className = isDark ? "dark" : "light";
+      
+      if(!isDark) {
+        themeIcon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>';
+      } else {
+        themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+      }
+    });
+  </script>
+</body>
+</html>
