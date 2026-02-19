@@ -36,8 +36,10 @@
       --bg-color: #f5f5f7;
       --text-main: #1d1d1f;
       --text-muted: rgba(60, 60, 67, 0.6);
+      
       --glass-bg: rgba(255, 255, 255, 0.65);
-      --glass-border: rgba(255, 255, 255, 0.4);
+      --glass-border: rgba(0, 0, 0, 0.1); 
+      
       --blob-1: #89C4F4;
       --blob-2: #E0BBE4;
       --blob-3: #D291BC;
@@ -264,10 +266,9 @@
       transform: rotate(-45deg) scale(1.1); box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
     }
 
-    /* ---- Improved Sequenced Footer (Fix Animation) ---- */
+    /* ---- Footer Animation Fixed ---- */
     .sticky-footer {
       position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-      /* Collapsed State */
       width: 50px; height: 50px; max-height: 50px; border-radius: 25px;
       overflow: hidden;
       
@@ -285,12 +286,12 @@
       opacity: 0;
       cursor: none;
 
-      /* FIX Exit: Animasi Width dan Max-height barengan saat keluar agar tidak "gepeng" */
+      /* FIX Exit: Synchronized shrink for instant pill-to-circle morph */
       transition: 
-        max-height 0.4s cubic-bezier(0.19, 1, 0.22, 1),
-        width 0.4s cubic-bezier(0.19, 1, 0.22, 1), /* Remove delay on width */
-        border-radius 0.4s cubic-bezier(0.19, 1, 0.22, 1),
-        padding 0.4s ease;
+        max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        border-radius 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        padding 0.3s ease;
     }
 
     .sticky-footer::before {
@@ -301,13 +302,13 @@
     /* Expanded State */
     .sticky-footer:hover, .sticky-footer.hover-active {
       width: 90%; max-width: 600px;
-      max-height: 300px; 
+      max-height: 500px; 
       border-radius: 24px;
       
-      /* Expand: Lebar dulu, baru Tinggi (pakai delay) */
+      /* Expand: Width first (fast), then Height */
       transition: 
         width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s, 
+        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.15s, 
         border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         
       box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2);
@@ -341,18 +342,35 @@
     .toggle-btn:hover::after, .toggle-btn.hover-active::after { opacity: 1; }
     .toggle-btn::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.1); opacity: 0; transition: opacity 0.3s; }
     
-    /* ---- AIR TOUCHPAD (Mobile Only) ---- */
+    /* ---- AIR TOUCHPAD (Optimized Transparency & Style) ---- */
     #air-touchpad {
       display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 35vh;
       z-index: 9999;
-      background: linear-gradient(to top, rgba(255,255,255,0.15), rgba(0,0,0,0.01));
-      backdrop-filter: blur(15px); border-top: 1px solid rgba(255,255,255,0.15);
-      touch-action: none; justify-content: center; align-items: center;
-      color: rgba(255,255,255,0.4); font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
-      text-transform: uppercase; box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+      
+      /* MORE TRANSPARENT & CLEANER LOOK */
+      background: rgba(20, 20, 20, 0.3); /* Low opacity dark default */
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* Reduced blur */
+      border-top: 1px solid var(--glass-border);
+      border-radius: 30px 30px 0 0; /* Card style */
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+      
+      touch-action: none; 
+      flex-direction: column; justify-content: center; align-items: center; gap: 12px;
+      
+      color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
+      text-transform: uppercase; 
     }
-    #air-touchpad span { pointer-events: none; animation: pulse 2s infinite; text-align: center; line-height: 1.5; }
-    @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+    
+    /* Light Mode Touchpad override for visibility */
+    body.light #air-touchpad {
+      background: rgba(255, 255, 255, 0.2); /* Very translucent white */
+      border-top: 1px solid rgba(0,0,0,0.1);
+      color: rgba(0,0,0,0.5);
+    }
+
+    /* List items without bullets */
+    .touch-instruction { display: flex; align-items: center; gap: 0; }
+    .touch-instruction span { display: none; } /* Hide bullets */
 
     @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes footerUp { from { opacity: 0; transform: translate(-50%, 40px); } to { opacity: 1; transform: translate(-50%, 0); } }
@@ -362,7 +380,12 @@
       .container { padding-top: 100px; padding-bottom: 220px; }
       .grid { grid-template-columns: 1fr; gap: 20px;}
       .card { height: 260px; padding: 25px; }
-      .sticky-footer { bottom: 38vh; } 
+      .sticky-footer { bottom: 38vh; width: 50px; } 
+      .sticky-footer.hover-active { 
+        width: calc(100% - 40px); 
+        max-width: none; 
+        border-radius: 20px;
+      }
       #air-touchpad { display: flex; }
       #hud-waveform { top: 30px; bottom: auto; left: 20px; width: 100px; height: 40px; }
     }
@@ -424,7 +447,9 @@
 
   <!-- AIR TOUCHPAD FOR MOBILE -->
   <div id="air-touchpad">
-    <span>1 FINGER: CURSOR // 2 FINGERS: SCROLL<br>TAP: CLICK</span>
+    <div class="touch-instruction">1 FINGER : CURSOR</div>
+    <div class="touch-instruction">2 FINGERS : SCROLL</div>
+    <div class="touch-instruction">TAP : CLICK</div>
   </div>
 
   <script>
@@ -624,7 +649,9 @@
         let activeCard = null;
         let isScrolling = false;
         let lastScrollY = 0;
-        let isCursorMoving = false; // Flag to prevent click on drag
+        
+        // Anti-misclick variable
+        let totalTouchMovement = 0;
 
         const updateCursor = () => {
             outer.style.transform = `translate(${vx}px, ${vy}px) translate(-50%, -50%)`;
@@ -634,12 +661,12 @@
 
         touchpad.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            touchpad.style.background = "rgba(255,255,255,0.15)";
+            touchpad.style.background = document.body.classList.contains('light') ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.1)";
             
             // Multi-touch detection
             if (e.touches.length === 1) {
                 isScrolling = false;
-                isCursorMoving = false; // Reset drag flag
+                totalTouchMovement = 0; // Reset tracking
                 lastTouchX = e.touches[0].clientX;
                 lastTouchY = e.touches[0].clientY;
             } else if (e.touches.length === 2) {
@@ -649,10 +676,11 @@
         }, {passive: false});
 
         touchpad.addEventListener('touchend', (e) => {
-             touchpad.style.background = "linear-gradient(to top, rgba(255,255,255,0.15), rgba(0,0,0,0.01))";
+             // Reset background logic
+             touchpad.style.background = "";
              
-             // Handle Click only if: 1 finger ended, NOT scrolling, and cursor didn't move significantly (Tap)
-             if (!isScrolling && !isCursorMoving && e.touches.length === 0) {
+             // Handle Click only if: 1 finger ended, NOT scrolling, AND total movement was minimal (Tap)
+             if (!isScrolling && totalTouchMovement < 5 && e.touches.length === 0) {
                  const el = document.elementFromPoint(vx, vy);
                  if(el) el.dispatchEvent(new MouseEvent('click', {view: window, bubbles: true, cancelable: true}));
              }
@@ -667,7 +695,6 @@
             if (e.touches.length === 2) {
                 const currentY = e.touches[0].clientY;
                 const deltaY = lastScrollY - currentY;
-                // INCREASED MULTIPLIER FOR FASTER SCROLL
                 scrollCont.scrollBy(0, deltaY * 3.0); 
                 lastScrollY = currentY;
                 return;
@@ -678,9 +705,8 @@
                 const touchX = e.touches[0].clientX; 
                 const touchY = e.touches[0].clientY;
                 
-                // Detect if finger moved significantly on touchpad
-                const distMoved = Math.hypot(touchX - lastTouchX, touchY - lastTouchY);
-                if (distMoved > 2) isCursorMoving = true; 
+                const distStep = Math.hypot(touchX - lastTouchX, touchY - lastTouchY);
+                totalTouchMovement += distStep;
 
                 vx += (touchX - lastTouchX) * sensitivity;
                 vy += (touchY - lastTouchY) * sensitivity;
