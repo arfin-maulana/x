@@ -75,7 +75,9 @@
         z-index: 5;
     }
 
-    /* BOOT SCREEN */
+    /* ==========================================
+       BOOT SCREEN
+       ========================================== */
     #boot-screen {
       position: fixed; inset: 0; z-index: 99999;
       background-color: var(--term-bg);
@@ -130,16 +132,17 @@
     }
     .glitch-active { animation: rgbGlitch 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
 
+    /* ==========================================
+       BACKGROUNDS & HUD
+       ========================================== */
     #hud-waveform {
       position: fixed; bottom: 30px; left: 30px; 
       width: 150px; height: 50px; z-index: 10; 
       pointer-events: none; opacity: 0.4; transition: opacity 0.3s;
       mix-blend-mode: screen; 
     }
-    
     body.light #hud-waveform { mix-blend-mode: multiply; opacity: 0.6; }
 
-    /* ---- Backgrounds ---- */
     .noise-overlay {
       position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.04;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
@@ -153,20 +156,61 @@
     .blob {
       position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.5;
       animation: float 20s infinite alternate cubic-bezier(0.4, 0, 0.2, 1);
-      transition: transform 0.2s cubic-bezier(0.1, 0.5, 0.1, 1);
+      transition: transform 0.15s cubic-bezier(0.1, 0.5, 0.1, 1);
     }
     .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--blob-1); }
     .blob-2 { bottom: -20%; right: -10%; width: 60vw; height: 60vw; background: var(--blob-2); animation-delay: -5s; }
     .blob-3 { top: 40%; right: 20%; width: 40vw; height: 40vw; background: var(--blob-3); opacity: 0.3; animation-delay: -10s; }
     @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(50px, 50px) scale(1.1); } }
 
-    /* ---- Custom Cursor ---- */
+    /* ---- NODE NETWORK CANVAS ---- */
+    #node-network {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      z-index: 1; pointer-events: none; opacity: 0.5;
+      transition: opacity 1s ease;
+      mix-blend-mode: screen;
+    }
+    body.light #node-network { mix-blend-mode: multiply; opacity: 0.3; }
+
+    /* ==========================================
+       STANDBY MODE TRANSITIONS (SCREENSAVER)
+       ========================================== */
+    .container, .liquid-bg, .sticky-footer, .toggle-btn, #air-touchpad, .search-wrapper {
+      transition: opacity 1.5s ease, filter 1.5s ease;
+    }
+
+    body.standby-active {
+      --bg-color: #020202 !important; 
+    }
+
+    body.standby-active .container,
+    body.standby-active .liquid-bg,
+    body.standby-active .sticky-footer,
+    body.standby-active .toggle-btn,
+    body.standby-active #air-touchpad {
+      opacity: 0.02; 
+      filter: blur(15px); 
+      pointer-events: none;
+    }
+
+    body.standby-active #node-network {
+      opacity: 0.9; 
+      z-index: 1000;
+    }
+    
+    body.standby-active #hud-waveform {
+      opacity: 0.8; 
+    }
+
+    /* ==========================================
+       CUSTOM CURSOR (CONVEX LENS EFFECT)
+       ========================================== */
     .cursor-outer {
       position: fixed; width: 40px; height: 40px;
       border: 1px solid var(--text-muted); border-radius: 50%;
       pointer-events: none; z-index: 2147483647;
       transform: translate(-50%, -50%); 
-      transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s;
+      transition: width 0.3s, height 0.3s, border-color 0.3s, background 0.3s, backdrop-filter 0.3s, box-shadow 0.3s;
       mix-blend-mode: difference;
     }
     .cursor-inner {
@@ -174,10 +218,41 @@
       background: var(--text-main); border-radius: 50%;
       pointer-events: none; z-index: 2147483647;
       transform: translate(-50%, -50%);
+      transition: opacity 0.3s, width 0.3s, height 0.3s, background 0.3s, border 0.3s, box-shadow 0.3s;
     }
-    body.hovering .cursor-outer { width: 60px; height: 60px; background: rgba(255,255,255,0.2); border-color: transparent; backdrop-filter: blur(2px); }
+    
+    /* Convex Lens Hover Effect */
+    body.hovering .cursor-outer { 
+      width: 65px; height: 65px; 
+      /* Spherical Gradient Lighting */
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.05) 50%, transparent 100%); 
+      border: 1px solid rgba(255, 255, 255, 0.4); 
+      mix-blend-mode: normal; 
+      
+      /* Refraksi: Contrast tinggi membuat efek kaca pembesar */
+      backdrop-filter: blur(2px) saturate(180%) contrast(1.3) brightness(1.1); 
+      -webkit-backdrop-filter: blur(2px) saturate(180%) contrast(1.3) brightness(1.1); 
+      
+      /* Inner shadows create the bulging 3D shape */
+      box-shadow: 
+        inset 0 12px 15px -5px rgba(255, 255, 255, 0.6), /* Cahaya atas */
+        inset 0 -12px 15px -5px rgba(0, 0, 0, 0.4), /* Bayangan lengkung bawah */
+        0 15px 25px rgba(0, 0, 0, 0.4); /* Bayangan lensa jatuh ke bawah */
+    }
 
-    /* ---- Layout ---- */
+    /* Glass Bead Inner Dot */
+    body.hovering .cursor-inner {
+      opacity: 1;
+      width: 10px; height: 10px;
+      background: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 1);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.9), inset 0 2px 3px rgba(255,255,255,1);
+      mix-blend-mode: normal;
+    }
+
+    /* ==========================================
+       LAYOUT & CARDS
+       ========================================== */
     .container { max-width: 1100px; margin: auto; padding: 140px 24px 200px; position: relative; z-index: 2; }
     
     .header-area { text-align: center; margin-bottom: 60px; }
@@ -254,23 +329,24 @@
       min-height: 70px; font-family: var(--font-mono); word-break: break-word;
     }
     .card-title.revealed { font-family: var(--font-display); }
+    
     .card-icon {
       width: 42px; height: 42px; border-radius: 50%;
       background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex; align-items: center; justify-content: center;
       color: var(--text-main); font-size: 18px; 
       transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      margin-top: 4px; margin-right: 4px;
     }
     .card:hover .card-icon, .card.virtual-hover .card-icon {
       background: #FFFFFF; color: #000000; border-color: transparent;
-      transform: rotate(-45deg) scale(1.1); box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
+      transform: rotate(45deg) scale(1.1); box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
     }
 
     /* ---- Footer Animation Fixed ---- */
     .sticky-footer {
       position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-      width: 50px; height: 50px; 
-      border-radius: 25px;
+      width: 50px; height: 50px; max-height: 50px; border-radius: 25px;
       overflow: hidden;
       
       background: var(--footer-bg);
@@ -281,32 +357,39 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
       
       display: flex; align-items: center; justify-content: center;
-      z-index: 100;
+      text-align: center; z-index: 100;
+      
       animation: footerUp 1s 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
       opacity: 0; cursor: none;
 
-      /* Sync transition for smooth circle returning */
-      transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-                  height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
-                  border-radius 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition: 
+        max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        border-radius 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        padding 0.3s ease;
     }
 
     .sticky-footer::before {
       content: 'i'; font-family: var(--font-mono); font-size: 18px; color: var(--text-muted);
-      position: absolute; transition: opacity 0.2s;
+      position: absolute; transition: opacity 0.3s;
     }
 
-    /* Expanded State */
     .sticky-footer:hover, .sticky-footer.hover-active {
       width: 90%; max-width: 600px;
-      height: 90px; /* Base height desktop */
+      max-height: 500px; 
       border-radius: 24px;
+      
+      transition: 
+        width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.15s, 
+        border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        
       box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2);
     }
 
+    .sticky-footer:hover, .sticky-footer.hover-active { padding: 18px 30px; }
     .sticky-footer:hover::before, .sticky-footer.hover-active::before { opacity: 0; }
 
-    /* Separate content container for text wrapping */
     .sticky-footer-content {
       position: absolute; width: 100%; padding: 0 30px;
       color: var(--text-muted); font-size: 13px; line-height: 1.5; font-weight: 400; text-align: center;
@@ -316,7 +399,7 @@
 
     .sticky-footer:hover .sticky-footer-content, .sticky-footer.hover-active .sticky-footer-content {
       visibility: visible; opacity: 1;
-      transition: opacity 0.4s 0.2s ease; /* Fade in after expanding */
+      transition: opacity 0.4s 0.2s ease; 
     }
 
     .sticky-footer a { color: var(--text-main); text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(150,150,150,0.4); transition: 0.2s; cursor: none; }
@@ -333,20 +416,17 @@
     .toggle-btn:hover::after, .toggle-btn.hover-active::after { opacity: 1; }
     .toggle-btn::after { content: ''; position: absolute; inset: 0; background: rgba(255,255,255,0.1); opacity: 0; transition: opacity 0.3s; }
     
-    /* ---- AIR TOUCHPAD (Optimized Transparency & Style) ---- */
+    /* ---- AIR TOUCHPAD (Mobile Only) ---- */
     #air-touchpad {
       display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 35vh;
       z-index: 9999;
-      
       background: rgba(20, 20, 20, 0.3);
       backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
       border-top: 1px solid var(--glass-border);
       border-radius: 30px 30px 0 0; 
       box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
-      
       touch-action: none; 
       flex-direction: column; justify-content: center; align-items: center; gap: 12px;
-      
       color: var(--text-muted); font-family: var(--font-mono); font-size: 10px; letter-spacing: 2px;
       text-transform: uppercase; 
     }
@@ -365,13 +445,13 @@
 
     @media(max-width: 800px) {
       h1 { font-size: 42px; }
-      .container { padding-top: 100px; padding-bottom: 220px; }
+      .container { padding-top: 100px; padding-bottom: 40vh; }
       .grid { grid-template-columns: 1fr; gap: 20px;}
       .card { height: 260px; padding: 25px; }
       
       .sticky-footer { bottom: 38vh; width: 50px; } 
       .sticky-footer:hover, .sticky-footer.hover-active { 
-        height: 120px; /* Lebih tinggi untuk teks wrap di HP */
+        height: 120px; 
       }
       .sticky-footer-content { padding: 0 20px; }
       
@@ -406,6 +486,9 @@
       <div class="blob blob-2"></div>
       <div class="blob blob-3"></div>
     </div>
+    
+    <!-- Node Network Canvas -->
+    <canvas id="node-network"></canvas>
 
     <button class="toggle-btn" id="toggleBtn" data-hover>
       <svg id="themeIcon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
@@ -429,7 +512,7 @@
 
     <div class="sticky-footer" data-hover>
       <div class="sticky-footer-content">
-        Just a place where I archive interesting quotes. To submit a thought to the index, or request a data removal, transmit your message to <a href="mailto:email@example.com" data-hover>[Email Anda]</a>.
+        Just a place where I archive interesting quotes. To submit a thought to the index, or request a data removal, transmit your message to <a href="mailto:manisdilaut@gmail.com" data-hover>[Arfin Maulana]</a>.
       </div>
     </div>
   </div>
@@ -442,20 +525,20 @@
   </div>
 
   <script>
-    // AUDIO
+    // ==========================================
+    // AUDIO SYSTEM
+    // ==========================================
     const hoverSound = new Audio("data:audio/wav;base64,UklGRjIAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAAAAAAAAAQABAAIAAgACAAIAAgABAAEAAQABAAAA/v/+/wAAAQACAAIAAQAAAAEAAAD+/wAAAQABAAEAAQABAAAAAQABAAAAAQAAAAEAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAAAAAD+/wAA/v8AAAAA/v8AAAAAAQAAAAEAAQAAAAAAAAD+/wAAAAABAAAAAQAAAAEAAQAAAAAAAAD+/wAA/v8AAAAA/v8AAAAA/v8AAAEAAQAAAAAAAAD+/wAAAAAAAAAAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAEAAQABAAAAAQABAAAAAQABAAAAAQABAAAAAQAAAAAAAAD+/wAA");
     hoverSound.volume = 0.15;
     const playHoverSound = () => { const s = hoverSound.cloneNode(); s.volume=0.15; s.play().catch(e=>{}); };
 
+    // ==========================================
+    // DATA DOKUMEN
+    // ==========================================
     const docs = [
-      { title: "Revisi Skripsi", link: "https://arfin-maulana.github.io/thoughts/doc1/" },
-      { title: "Menuju Indonesia Emas", link: "#" },
-      { title: "Do Something", link: "#" },
-      { title: "Refleksi Akhir Tahun", link: "#" },
-      { title: "Catatan Koding", link: "#" },
-      { title: "The Art of Doing Nothing", link: "#" },
-      { title: "Project 2026 Ideas", link: "#" },
-      { title: "Futuristic UI Design", link: "#" }
+      { title: "Epigraph", link: "https://arfin-maulana.github.io/epigram/" },
+      { title: "Contextualization", link: "https://arfin-maulana.github.io/thoughts/doc1.pdf" },
+      { title: "Do Something", link: "https://arfin-maulana.github.io/thoughts/doc3/" }
     ];
 
     // HASH ALGORITHM FOR UNIQUE SYS ID PER CARD TITLE
@@ -467,7 +550,9 @@
       return Math.abs(hash % 10000).toString().padStart(4, '0');
     };
 
-    // BOOT SEQUENCE
+    // ==========================================
+    // BOOT SEQUENCE & INITIALIZATION
+    // ==========================================
     const bootScreen = document.getElementById('boot-screen');
     const terminalEl = document.getElementById('terminal-text');
     const startBtn = document.getElementById('start-btn');
@@ -476,7 +561,7 @@
       "> INITIALIZING KERNEL...",
       "> BYPASSING BROWSER SECURITY PROTOCOLS [OK]",
       "> DECRYPTING THOUGHT_ARCHIVE.DAT...",
-      "> REQUESTING GYROSCOPE ACCESS...",
+      "> REQUESTING SENSOR ACCESS...",
       "> SYSTEM READY."
     ];
     let msgIndex = 0;
@@ -501,6 +586,8 @@
 
     startBtn.addEventListener('click', () => {
       playHoverSound();
+      
+      // Initialize Gyroscope
       if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
           .then(state => { if (state === 'granted') window.addEventListener('deviceorientation', handleOrientation); })
@@ -508,6 +595,8 @@
       } else {
         window.addEventListener('deviceorientation', handleOrientation);
       }
+
+      // Transition to Main UI
       document.body.classList.add('glitch-active');
       bootScreen.style.opacity = "0";
       setTimeout(() => {
@@ -516,17 +605,28 @@
       }, 800);
     });
 
+    // ==========================================
+    // GYROSCOPE (Intensified Parallax)
+    // ==========================================
     function handleOrientation(e) {
-      if (!e.gamma || !e.beta) return;
-      const tiltX = Math.min(Math.max(e.gamma, -30), 30); 
-      const tiltY = Math.min(Math.max(e.beta - 45, -30), 30); 
+      let gamma = e.gamma; 
+      let beta = e.beta; 
+      if (gamma === null || beta === null) return;
+      
+      // Amplified multipliers for immediate noticeable effect
+      const tiltX = Math.max(-100, Math.min(100, gamma * 4)); 
+      const tiltY = Math.max(-100, Math.min(100, (beta - 45) * 4)); 
+      
       const blobs = document.querySelectorAll('.blob');
       blobs.forEach((blob, index) => {
-        const depth = (index + 1) * 1.5; 
+        const depth = (index + 1) * 2.5; 
         blob.style.transform = `translate(${tiltX * depth}px, ${tiltY * depth}px)`;
       });
     }
 
+    // ==========================================
+    // HUD WAVEFORM OSCILLOSCOPE
+    // ==========================================
     const waveCanvas = document.getElementById('hud-waveform');
     const ctx = waveCanvas.getContext('2d');
     waveCanvas.width = 150; waveCanvas.height = 50;
@@ -544,7 +644,7 @@
       }
       ctx.stroke();
       time += 0.15;
-      if (waveAmplitude > 2) waveAmplitude -= 0.5; 
+      if (waveAmplitude > 2) waveAmplitude -= 0.5; // Smooth decay back to idle
       requestAnimationFrame(drawWaveform);
     }
     drawWaveform();
@@ -554,6 +654,112 @@
     window.addEventListener('touchmove', spikeWaveform);
     document.getElementById("searchInput").addEventListener("input", spikeWaveform);
 
+    // ==========================================
+    // NODE NETWORK & STANDBY MODE (SCREENSAVER)
+    // ==========================================
+    const nodeCanvas = document.getElementById('node-network');
+    const nCtx = nodeCanvas.getContext('2d');
+    let netWidth, netHeight;
+    let netMouseX = -1000;
+    let netMouseY = -1000;
+
+    function resizeNetwork() {
+        netWidth = nodeCanvas.width = window.innerWidth;
+        netHeight = nodeCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeNetwork);
+    resizeNetwork();
+
+    const nodes = [];
+    const numNodes = Math.floor((window.innerWidth * window.innerHeight) / 12000); 
+
+    for(let i = 0; i < numNodes; i++) {
+        nodes.push({
+            x: Math.random() * netWidth,
+            y: Math.random() * netHeight,
+            vx: (Math.random() - 0.5) * 0.6, 
+            vy: (Math.random() - 0.5) * 0.6, 
+            radius: Math.random() * 1.5 + 0.5 
+        });
+    }
+
+    function drawNetwork() {
+        nCtx.clearRect(0, 0, netWidth, netHeight);
+        const isLightMode = document.body.classList.contains('light');
+        const colorBase = isLightMode ? '0, 0, 0' : '0, 255, 65'; // Matrix green in dark mode
+        
+        nCtx.fillStyle = `rgba(${colorBase}, 0.5)`;
+
+        for(let i = 0; i < numNodes; i++) {
+            let n = nodes[i];
+            n.x += n.vx;
+            n.y += n.vy;
+
+            if(n.x < 0 || n.x > netWidth) n.vx *= -1;
+            if(n.y < 0 || n.y > netHeight) n.vy *= -1;
+
+            nCtx.beginPath();
+            nCtx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
+            nCtx.fill();
+
+            for(let j = i + 1; j < numNodes; j++) {
+                let n2 = nodes[j];
+                let dist = Math.hypot(n.x - n2.x, n.y - n2.y);
+                if(dist < 130) {
+                    nCtx.beginPath();
+                    nCtx.moveTo(n.x, n.y);
+                    nCtx.lineTo(n2.x, n2.y);
+                    nCtx.lineWidth = 0.5;
+                    nCtx.strokeStyle = `rgba(${colorBase}, ${(1 - dist/130) * 0.3})`;
+                    nCtx.stroke();
+                }
+            }
+
+            // Don't connect to mouse if in standby mode
+            let distMouse = Math.hypot(n.x - netMouseX, n.y - netMouseY);
+            if(distMouse < 180 && !document.body.classList.contains('standby-active')) {
+                nCtx.beginPath();
+                nCtx.moveTo(n.x, n.y);
+                nCtx.lineTo(netMouseX, netMouseY);
+                nCtx.lineWidth = 1;
+                nCtx.strokeStyle = `rgba(${colorBase}, ${(1 - distMouse/180) * 0.5})`;
+                nCtx.stroke();
+            }
+        }
+        requestAnimationFrame(drawNetwork);
+    }
+    drawNetwork();
+
+    // IDLE TIMER LOGIC
+    let idleTimeout;
+    const IDLE_TIME = 7000; // 7 seconds
+
+    function wakeUpSystem() {
+        if (document.body.classList.contains('standby-active')) {
+            document.body.classList.remove('standby-active');
+            playHoverSound(); 
+            spikeWaveform();
+        }
+    }
+
+    function resetIdleTimer() {
+        wakeUpSystem();
+        clearTimeout(idleTimeout);
+        idleTimeout = setTimeout(() => {
+            document.body.classList.add('standby-active');
+            netMouseX = -1000; 
+            netMouseY = -1000;
+        }, IDLE_TIME);
+    }
+
+    window.addEventListener('mousemove', resetIdleTimer);
+    window.addEventListener('touchmove', resetIdleTimer);
+    window.addEventListener('click', resetIdleTimer);
+    document.getElementById('scroll-container').addEventListener('scroll', resetIdleTimer);
+
+    // ==========================================
+    // CARDS LOGIC
+    // ==========================================
     const cardGrid = document.getElementById("cardGrid");
     const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
     let isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -575,7 +781,7 @@
       card.innerHTML = `
         <div class="card-meta">
           <span class="card-num">SYS.${sysID} // ID:${numID}</span>
-          <div class="card-icon">↗</div>
+          <div class="card-icon">↑</div>
         </div>
         <div class="card-main">
           <h3 class="card-title" aria-label="${originalText}">${initialScrambled}</h3>
@@ -636,20 +842,13 @@
     // ANTI-DIRECT TOUCH LOGIC
     if (isTouchDevice) {
         const scrollCont = document.getElementById('scroll-container');
-        
-        // Prevent manual touch scrolling on the container to enforce touchpad
         scrollCont.addEventListener('touchstart', (e) => {
-            // Allow focus if tapping search bar directly (optional flexibility for typing)
             if(e.target.tagName !== 'INPUT') e.preventDefault();
         }, {passive: false});
         
-        // Block direct click completely, only allow simulated clicks from touchpad
         scrollCont.addEventListener('click', (e) => {
-            if (!e.isVirtual) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        }, true); // Capture phase
+            if (!e.isVirtual) { e.preventDefault(); e.stopPropagation(); }
+        }, true); 
     }
 
     // AIR TOUCHPAD 2.0 (MULTI-TOUCH)
@@ -666,13 +865,13 @@
         let activeCard = null;
         let isScrolling = false;
         let lastScrollY = 0;
-        
-        // Anti-misclick tracking
         let totalTouchMovement = 0;
 
         const updateCursor = () => {
             outer.style.transform = `translate(${vx}px, ${vy}px) translate(-50%, -50%)`;
             inner.style.transform = `translate(${vx}px, ${vy}px) translate(-50%, -50%)`;
+            netMouseX = vx; // Update node network target
+            netMouseY = vy;
         };
         updateCursor();
 
@@ -682,34 +881,34 @@
             
             if (e.touches.length === 1) {
                 isScrolling = false;
-                totalTouchMovement = 0; // Reset movement for click check
+                totalTouchMovement = 0; 
                 lastTouchX = e.touches[0].clientX;
                 lastTouchY = e.touches[0].clientY;
             } else if (e.touches.length === 2) {
                 isScrolling = true;
                 lastScrollY = e.touches[0].clientY;
             }
+            resetIdleTimer();
         }, {passive: false});
 
         touchpad.addEventListener('touchend', (e) => {
              touchpad.style.background = "";
              
-             // FIRE CLICK ONLY IF DRAG DISTANCE IS EXTREMELY SMALL (< 5px)
-             if (!isScrolling && totalTouchMovement < 5 && e.touches.length === 0) {
+             if (!isScrolling && totalTouchMovement < 3 && e.touches.length === 0) {
                  const el = document.elementFromPoint(vx, vy);
                  if(el) {
                     if (el.tagName === 'INPUT') el.focus();
                     const simulatedClick = new MouseEvent('click', {view: window, bubbles: true, cancelable: true});
-                    simulatedClick.isVirtual = true; // Mark as allowed click
+                    simulatedClick.isVirtual = true; 
                     el.dispatchEvent(simulatedClick);
                  }
              }
-             
              if (e.touches.length === 0) isScrolling = false;
         });
 
         touchpad.addEventListener('touchmove', (e) => {
             e.preventDefault();
+            resetIdleTimer();
             
             if (e.touches.length === 2) {
                 const currentY = e.touches[0].clientY;
@@ -723,7 +922,6 @@
                 const touchX = e.touches[0].clientX; 
                 const touchY = e.touches[0].clientY;
                 
-                // Track total distance to prevent click on release after dragging
                 const distStep = Math.hypot(touchX - lastTouchX, touchY - lastTouchY);
                 totalTouchMovement += distStep;
 
@@ -781,6 +979,9 @@
           const x = e.clientX; const y = e.clientY;
           inner.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
           outer.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+          
+          netMouseX = x; // Link to Node Network
+          netMouseY = y;
 
           const rect = toggleBtnEl.getBoundingClientRect();
           const dist = Math.hypot(x - (rect.left+rect.width/2), y - (rect.top+rect.height/2));
@@ -812,9 +1013,8 @@
     const themeIcon = document.getElementById("themeIcon");
     let isDark = true;
     
-    // Execute Toggle Theme Click only if allowed by virtual click or non-touch mouse click
     toggleBtn.addEventListener("click", (e) => {
-      if (isTouchDevice && !e.isVirtual) return; // Anti manual click
+      if (isTouchDevice && !e.isVirtual) return; 
       
       playHoverSound();
       isDark = !isDark;
@@ -825,6 +1025,9 @@
         themeIcon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
       }
     });
+    
+    // Start idle timer immediately
+    resetIdleTimer();
   </script>
 </body>
 </html>
