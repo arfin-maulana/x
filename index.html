@@ -269,8 +269,8 @@
     /* ---- Footer Animation Fixed ---- */
     .sticky-footer {
       position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-      /* Collapsed State */
-      width: 50px; height: 50px; max-height: 50px; border-radius: 25px;
+      width: 50px; height: 50px; 
+      border-radius: 25px;
       overflow: hidden;
       
       background: var(--footer-bg);
@@ -281,52 +281,42 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.3);
       
       display: flex; align-items: center; justify-content: center;
-      text-align: center; z-index: 100;
-      
+      z-index: 100;
       animation: footerUp 1s 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
-      opacity: 0;
-      cursor: none;
+      opacity: 0; cursor: none;
 
-      /* FIX Exit: Synchronized shrink for instant pill-to-circle morph */
-      transition: 
-        max-height 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
-        width 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
-        border-radius 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
-        padding 0.3s ease;
+      /* Sync transition for smooth circle returning */
+      transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+                  height 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+                  border-radius 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
     }
 
     .sticky-footer::before {
       content: 'i'; font-family: var(--font-mono); font-size: 18px; color: var(--text-muted);
-      position: absolute; transition: opacity 0.3s;
+      position: absolute; transition: opacity 0.2s;
     }
 
     /* Expanded State */
     .sticky-footer:hover, .sticky-footer.hover-active {
       width: 90%; max-width: 600px;
-      max-height: 500px; 
+      height: 90px; /* Base height desktop */
       border-radius: 24px;
-      
-      /* Expand: Width first (fast), then Height */
-      transition: 
-        width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.15s, 
-        border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        
       box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2);
     }
 
-    .sticky-footer:hover, .sticky-footer.hover-active { padding: 18px 30px; }
     .sticky-footer:hover::before, .sticky-footer.hover-active::before { opacity: 0; }
 
-    .sticky-footer p { 
-      margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5; font-weight: 400;
-      opacity: 0; width: 0; white-space: nowrap;
-      transition: opacity 0.1s, width 0s 0.2s; 
+    /* Separate content container for text wrapping */
+    .sticky-footer-content {
+      position: absolute; width: 100%; padding: 0 30px;
+      color: var(--text-muted); font-size: 13px; line-height: 1.5; font-weight: 400; text-align: center;
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.1s ease;
     }
 
-    .sticky-footer:hover p, .sticky-footer.hover-active p {
-      opacity: 1; width: auto; white-space: normal;
-      transition: opacity 0.4s 0.3s;
+    .sticky-footer:hover .sticky-footer-content, .sticky-footer.hover-active .sticky-footer-content {
+      visibility: visible; opacity: 1;
+      transition: opacity 0.4s 0.2s ease; /* Fade in after expanding */
     }
 
     .sticky-footer a { color: var(--text-main); text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(150,150,150,0.4); transition: 0.2s; cursor: none; }
@@ -348,11 +338,10 @@
       display: none; position: fixed; bottom: 0; left: 0; width: 100%; height: 35vh;
       z-index: 9999;
       
-      /* MORE TRANSPARENT & CLEANER LOOK */
-      background: rgba(20, 20, 20, 0.3); /* Low opacity dark default */
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); /* Reduced blur */
+      background: rgba(20, 20, 20, 0.3);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
       border-top: 1px solid var(--glass-border);
-      border-radius: 30px 30px 0 0; /* Card style */
+      border-radius: 30px 30px 0 0; 
       box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
       
       touch-action: none; 
@@ -362,16 +351,14 @@
       text-transform: uppercase; 
     }
     
-    /* Light Mode Touchpad override for visibility */
     body.light #air-touchpad {
-      background: rgba(255, 255, 255, 0.2); /* Very translucent white */
+      background: rgba(255, 255, 255, 0.2);
       border-top: 1px solid rgba(0,0,0,0.1);
       color: rgba(0,0,0,0.5);
     }
 
-    /* List items without bullets */
     .touch-instruction { display: flex; align-items: center; gap: 0; }
-    .touch-instruction span { display: none; } /* Hide bullets */
+    .touch-instruction span { display: none; } 
 
     @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes footerUp { from { opacity: 0; transform: translate(-50%, 40px); } to { opacity: 1; transform: translate(-50%, 0); } }
@@ -381,14 +368,13 @@
       .container { padding-top: 100px; padding-bottom: 220px; }
       .grid { grid-template-columns: 1fr; gap: 20px;}
       .card { height: 260px; padding: 25px; }
-      /* Mobile Footer Fix */
+      
       .sticky-footer { bottom: 38vh; width: 50px; } 
-      .sticky-footer.hover-active { 
-        width: auto;
-        min-width: 300px;
-        max-width: 90%;
-        border-radius: 20px;
+      .sticky-footer:hover, .sticky-footer.hover-active { 
+        height: 120px; /* Lebih tinggi untuk teks wrap di HP */
       }
+      .sticky-footer-content { padding: 0 20px; }
+      
       #air-touchpad { display: flex; }
       #hud-waveform { top: 30px; bottom: auto; left: 20px; width: 100px; height: 40px; }
     }
@@ -442,9 +428,9 @@
     </div>
 
     <div class="sticky-footer" data-hover>
-      <p>
+      <div class="sticky-footer-content">
         Just a place where I archive interesting quotes. To submit a thought to the index, or request a data removal, transmit your message to <a href="mailto:email@example.com" data-hover>[Email Anda]</a>.
-      </p>
+      </div>
     </div>
   </div>
 
@@ -471,6 +457,15 @@
       { title: "Project 2026 Ideas", link: "#" },
       { title: "Futuristic UI Design", link: "#" }
     ];
+
+    // HASH ALGORITHM FOR UNIQUE SYS ID PER CARD TITLE
+    const hashString = (str) => {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+          hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return Math.abs(hash % 10000).toString().padStart(4, '0');
+    };
 
     // BOOT SEQUENCE
     const bootScreen = document.getElementById('boot-screen');
@@ -568,7 +563,7 @@
       wrap.className = "card-wrap";
       wrap.style.animationDelay = `${index * 0.08 + 1}s`;
 
-      const sysID = (Math.random() * 1000).toFixed(0).padStart(4, '0');
+      const sysID = hashString(doc.title); // Unique dynamic ID based on title
       const numID = (index + 1).toString().padStart(2, '0');
       const originalText = doc.title;
       const initialScrambled = originalText.split('').map(c => c === ' ' ? ' ' : letters[Math.floor(Math.random() * letters.length)]).join('');
@@ -638,6 +633,25 @@
 
     docs.forEach((doc, i) => createCard(doc, i));
 
+    // ANTI-DIRECT TOUCH LOGIC
+    if (isTouchDevice) {
+        const scrollCont = document.getElementById('scroll-container');
+        
+        // Prevent manual touch scrolling on the container to enforce touchpad
+        scrollCont.addEventListener('touchstart', (e) => {
+            // Allow focus if tapping search bar directly (optional flexibility for typing)
+            if(e.target.tagName !== 'INPUT') e.preventDefault();
+        }, {passive: false});
+        
+        // Block direct click completely, only allow simulated clicks from touchpad
+        scrollCont.addEventListener('click', (e) => {
+            if (!e.isVirtual) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true); // Capture phase
+    }
+
     // AIR TOUCHPAD 2.0 (MULTI-TOUCH)
     if (isTouchDevice) {
         const touchpad = document.getElementById('air-touchpad');
@@ -647,13 +661,13 @@
         
         let vx = window.innerWidth / 2;
         let vy = window.innerHeight / 2 - 100;
-        const sensitivity = 1.7; // Lowered sensitivity
+        const sensitivity = 1.7;
         let lastTouchX = 0, lastTouchY = 0;
         let activeCard = null;
         let isScrolling = false;
         let lastScrollY = 0;
         
-        // Anti-misclick variable
+        // Anti-misclick tracking
         let totalTouchMovement = 0;
 
         const updateCursor = () => {
@@ -666,31 +680,28 @@
             e.preventDefault();
             touchpad.style.background = document.body.classList.contains('light') ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.1)";
             
-            // Multi-touch detection
             if (e.touches.length === 1) {
                 isScrolling = false;
-                totalTouchMovement = 0; // Reset tracking
+                totalTouchMovement = 0; // Reset movement for click check
                 lastTouchX = e.touches[0].clientX;
                 lastTouchY = e.touches[0].clientY;
             } else if (e.touches.length === 2) {
                 isScrolling = true;
-                lastScrollY = e.touches[0].clientY; // Use leader finger
+                lastScrollY = e.touches[0].clientY;
             }
         }, {passive: false});
 
         touchpad.addEventListener('touchend', (e) => {
-             // Reset background logic
              touchpad.style.background = "";
              
-             // Handle Click only if: 1 finger ended, NOT scrolling, AND total movement was minimal (Tap)
-             if (!isScrolling && totalTouchMovement < 2 && e.touches.length === 0) {
+             // FIRE CLICK ONLY IF DRAG DISTANCE IS EXTREMELY SMALL (< 5px)
+             if (!isScrolling && totalTouchMovement < 5 && e.touches.length === 0) {
                  const el = document.elementFromPoint(vx, vy);
                  if(el) {
-                    // Check if it's an input to allow focus
-                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                        el.focus();
-                    }
-                    el.dispatchEvent(new MouseEvent('click', {view: window, bubbles: true, cancelable: true}));
+                    if (el.tagName === 'INPUT') el.focus();
+                    const simulatedClick = new MouseEvent('click', {view: window, bubbles: true, cancelable: true});
+                    simulatedClick.isVirtual = true; // Mark as allowed click
+                    el.dispatchEvent(simulatedClick);
                  }
              }
              
@@ -700,7 +711,6 @@
         touchpad.addEventListener('touchmove', (e) => {
             e.preventDefault();
             
-            // 2 Finger Scroll
             if (e.touches.length === 2) {
                 const currentY = e.touches[0].clientY;
                 const deltaY = lastScrollY - currentY;
@@ -709,11 +719,11 @@
                 return;
             }
 
-            // 1 Finger Cursor
             if (e.touches.length === 1 && !isScrolling) {
                 const touchX = e.touches[0].clientX; 
                 const touchY = e.touches[0].clientY;
                 
+                // Track total distance to prevent click on release after dragging
                 const distStep = Math.hypot(touchX - lastTouchX, touchY - lastTouchY);
                 totalTouchMovement += distStep;
 
@@ -724,7 +734,6 @@
                 
                 updateCursor();
 
-                // Hit Testing
                 const el = document.elementFromPoint(vx, vy);
                 const cardEl = el ? el.closest('.card') : null;
 
@@ -738,11 +747,9 @@
                     activeCard.onLeave(); activeCard = null;
                 }
                 
-                // Magnetic Button & Footer Expansion Logic
                 const toggleBtnEl = document.querySelector('.toggle-btn');
                 const stickyFooter = document.querySelector('.sticky-footer');
                 
-                // Toggle Button Magnet
                 const rect = toggleBtnEl.getBoundingClientRect();
                 const dist = Math.hypot(vx - (rect.left+rect.width/2), vy - (rect.top+rect.height/2));
                 if(dist < 80) {
@@ -753,9 +760,7 @@
                    toggleBtnEl.classList.remove('hover-active');
                 }
 
-                // Sticky Footer Expansion Logic (Virtual Hover)
                 const footerRect = stickyFooter.getBoundingClientRect();
-                // Check if virtual cursor is inside footer bounds
                 if (vx >= footerRect.left && vx <= footerRect.right && vy >= footerRect.top && vy <= footerRect.bottom) {
                     stickyFooter.classList.add('hover-active');
                 } else {
@@ -806,7 +811,11 @@
     const toggleBtn = document.getElementById("toggleBtn");
     const themeIcon = document.getElementById("themeIcon");
     let isDark = true;
-    toggleBtn.addEventListener("click", () => {
+    
+    // Execute Toggle Theme Click only if allowed by virtual click or non-touch mouse click
+    toggleBtn.addEventListener("click", (e) => {
+      if (isTouchDevice && !e.isVirtual) return; // Anti manual click
+      
       playHoverSound();
       isDark = !isDark;
       document.body.className = isDark ? "dark" : "light";
