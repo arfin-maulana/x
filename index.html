@@ -269,6 +269,7 @@
     /* ---- Footer Animation Fixed ---- */
     .sticky-footer {
       position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+      /* Collapsed State */
       width: 50px; height: 50px; max-height: 50px; border-radius: 25px;
       overflow: hidden;
       
@@ -288,9 +289,9 @@
 
       /* FIX Exit: Synchronized shrink for instant pill-to-circle morph */
       transition: 
-        max-height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
-        width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
-        border-radius 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+        max-height 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+        width 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+        border-radius 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
         padding 0.3s ease;
     }
 
@@ -380,10 +381,12 @@
       .container { padding-top: 100px; padding-bottom: 220px; }
       .grid { grid-template-columns: 1fr; gap: 20px;}
       .card { height: 260px; padding: 25px; }
+      /* Mobile Footer Fix */
       .sticky-footer { bottom: 38vh; width: 50px; } 
       .sticky-footer.hover-active { 
-        width: calc(100% - 40px); 
-        max-width: none; 
+        width: auto;
+        min-width: 300px;
+        max-width: 90%;
         border-radius: 20px;
       }
       #air-touchpad { display: flex; }
@@ -644,7 +647,7 @@
         
         let vx = window.innerWidth / 2;
         let vy = window.innerHeight / 2 - 100;
-        const sensitivity = 2.5;
+        const sensitivity = 1.7; // Lowered sensitivity
         let lastTouchX = 0, lastTouchY = 0;
         let activeCard = null;
         let isScrolling = false;
@@ -680,9 +683,15 @@
              touchpad.style.background = "";
              
              // Handle Click only if: 1 finger ended, NOT scrolling, AND total movement was minimal (Tap)
-             if (!isScrolling && totalTouchMovement < 5 && e.touches.length === 0) {
+             if (!isScrolling && totalTouchMovement < 2 && e.touches.length === 0) {
                  const el = document.elementFromPoint(vx, vy);
-                 if(el) el.dispatchEvent(new MouseEvent('click', {view: window, bubbles: true, cancelable: true}));
+                 if(el) {
+                    // Check if it's an input to allow focus
+                    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                        el.focus();
+                    }
+                    el.dispatchEvent(new MouseEvent('click', {view: window, bubbles: true, cancelable: true}));
+                 }
              }
              
              if (e.touches.length === 0) isScrolling = false;
