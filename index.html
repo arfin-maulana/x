@@ -64,12 +64,11 @@
       touch-action: none; /* Prevent browser scroll handling */
     }
 
-    /* Scrollable container */
+    /* Scrollable container - REMOVED scroll-behavior: smooth for instant JS control */
     #scroll-container {
         height: 100vh;
         overflow-y: auto;
-        touch-action: none; /* Kita handle scroll via JS untuk touchpad */
-        scroll-behavior: smooth;
+        touch-action: none;
         position: relative;
         z-index: 5;
     }
@@ -133,7 +132,13 @@
       position: fixed; bottom: 30px; left: 30px; 
       width: 150px; height: 50px; z-index: 10; 
       pointer-events: none; opacity: 0.4; transition: opacity 0.3s;
-      mix-blend-mode: screen;
+      mix-blend-mode: screen; /* Default for Dark Mode */
+    }
+    
+    /* FIX: Visibility in Light Mode */
+    body.light #hud-waveform {
+        mix-blend-mode: multiply;
+        opacity: 0.6;
     }
 
     /* ---- Backgrounds ---- */
@@ -263,7 +268,7 @@
       transform: rotate(-45deg) scale(1.1); box-shadow: 0 0 25px rgba(255, 255, 255, 0.6);
     }
 
-    /* ---- Improved Sequenced Footer ---- */
+    /* ---- Improved Sequenced Footer (Fix Animation) ---- */
     .sticky-footer {
       position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
       /* Collapsed State */
@@ -284,12 +289,13 @@
       opacity: 0;
       cursor: none;
 
-      /* Collapse Sequence: Height/Content -> Width */
+      /* Collapse Sequence FIX: Wait a bit for height, then snap width faster */
+      /* Delay width reduction slightly less so it feels like it shrinks together but structured */
       transition: 
-        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        width 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s,
-        border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s,
-        padding 0.4s ease;
+        max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        width 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s, /* Faster sequence on exit */
+        border-radius 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+        padding 0.3s ease;
     }
 
     .sticky-footer::before {
@@ -298,7 +304,7 @@
     }
 
     /* Expanded State */
-    .sticky-footer:hover {
+    .sticky-footer:hover, .sticky-footer.hover-active {
       width: 90%; max-width: 600px;
       max-height: 300px; /* Allow height to grow */
       border-radius: 24px;
@@ -306,25 +312,25 @@
       /* Expand Sequence: Width -> Height */
       transition: 
         width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s,
+        max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
         border-radius 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         
       box-shadow: 0 20px 40px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.2), inset 0 -2px 4px rgba(0,0,0,0.2);
     }
 
     /* Content adjustments for animation */
-    .sticky-footer:hover { padding: 18px 30px; }
-    .sticky-footer:hover::before { opacity: 0; }
+    .sticky-footer:hover, .sticky-footer.hover-active { padding: 18px 30px; }
+    .sticky-footer:hover::before, .sticky-footer.hover-active::before { opacity: 0; }
 
     .sticky-footer p { 
       margin: 0; font-size: 13px; color: var(--text-muted); line-height: 1.5; font-weight: 400;
       opacity: 0; width: 0; white-space: nowrap;
-      transition: opacity 0.2s, width 0s 0.4s; /* Hide immediately when collapsing */
+      transition: opacity 0.1s, width 0s 0.2s; /* Hide fast */
     }
 
-    .sticky-footer:hover p {
+    .sticky-footer:hover p, .sticky-footer.hover-active p {
       opacity: 1; width: auto; white-space: normal;
-      transition: opacity 0.4s 0.4s; /* Show after expansion */
+      transition: opacity 0.4s 0.3s; /* Show after expansion */
     }
 
     .sticky-footer a { color: var(--text-main); text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(150,150,150,0.4); transition: 0.2s; cursor: none; }
@@ -666,7 +672,8 @@
             if (e.touches.length === 2) {
                 const currentY = e.touches[0].clientY;
                 const deltaY = lastScrollY - currentY;
-                scrollCont.scrollBy(0, deltaY * 2.5); // Multiplier for scroll speed
+                // INCREASED MULTIPLIER FOR FASTER SCROLL
+                scrollCont.scrollBy(0, deltaY * 3.0); 
                 lastScrollY = currentY;
                 return;
             }
@@ -697,11 +704,11 @@
                     activeCard.onLeave(); activeCard = null;
                 }
                 
-                // Magnetic Button
+                // Magnetic Button & Footer Expansion Logic
                 const toggleBtnEl = document.querySelector('.toggle-btn');
                 const stickyFooter = document.querySelector('.sticky-footer');
                 
-                // Check magnetic for toggle
+                // Toggle Button Magnet
                 const rect = toggleBtnEl.getBoundingClientRect();
                 const dist = Math.hypot(vx - (rect.left+rect.width/2), vy - (rect.top+rect.height/2));
                 if(dist < 80) {
@@ -712,17 +719,13 @@
                    toggleBtnEl.classList.remove('hover-active');
                 }
 
-                // Check hover for sticky footer to expand it
+                // Sticky Footer Expansion Logic (Virtual Hover)
                 const footerRect = stickyFooter.getBoundingClientRect();
+                // Check if virtual cursor is inside footer bounds
                 if (vx >= footerRect.left && vx <= footerRect.right && vy >= footerRect.top && vy <= footerRect.bottom) {
-                    stickyFooter.classList.add('hover-active'); // We need manual class trigger for virtual cursor
-                    // Simulate hover effect via class since :hover won't work with virtual cursor easily without elementFromPoint constnatly
-                    // Actually :hover works if we dispatch mousemove events, but pure CSS hover on virtual cursor coords is tricky.
-                    // Easier: Just let the native elementFromPoint handle "click", but for hover styles we might need JS assistance or just rely on the fact that `elementFromPoint` might trigger CSS hover if the browser supports it, usually it doesn't for a div overlay.
-                    // Let's force hover state via class for footer
-                    stickyFooter.dispatchEvent(new MouseEvent('mouseenter'));
+                    stickyFooter.classList.add('hover-active');
                 } else {
-                    stickyFooter.dispatchEvent(new MouseEvent('mouseleave'));
+                    stickyFooter.classList.remove('hover-active');
                 }
 
                 lastTouchX = touchX; lastTouchY = touchY;
